@@ -6,7 +6,7 @@ import Footer from "@/Components/Footer.vue";
 defineProps({
     title: {
         type: String,
-        default: "Visibilité des Députés",
+        default: "HémiCycle",
     },
     canLogin: {
         type: Boolean,

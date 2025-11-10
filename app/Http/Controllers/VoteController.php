@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Vote;
+use App\Models\PoliticalGroup;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -50,10 +51,16 @@ class VoteController extends Controller
             ->pluck('type')
             ->filter();
 
+        // Partis politiques disponibles
+        $parties = PoliticalGroup::select('sigle', 'nom', 'couleur')
+            ->orderBy('nom')
+            ->get();
+
         return Inertia::render('Votes/Index', [
             'votes' => $votes,
             'stats' => $stats,
             'types' => $types,
+            'parties' => $parties,
             'filters' => $request->only(['type', 'resultat', 'search']),
         ]);
     }
@@ -63,17 +70,7 @@ class VoteController extends Controller
      */
     public function show(Vote $vote)
     {
-        $vote->load(['deputyVotes.deputy']);
-
-        // Ajouter les informations de groupe à chaque député
-        foreach ($vote->deputyVotes as $deputyVote) {
-            $deputy = $deputyVote->deputy;
-            $deputyVote->deputy->political_group = [
-                'libelle' => $deputy->groupe_politique,
-                'libelle_abrege' => $deputy->groupe_politique,
-                'couleur_associee' => null,
-            ];
-        }
+        $vote->load(['deputyVotes.deputy.politicalGroup']);
 
         $deputyVotes = $vote->deputyVotes->groupBy('position');
 
@@ -84,10 +81,32 @@ class VoteController extends Controller
             'non_votant' => $deputyVotes->get('non_votant', collect())->count(),
         ];
 
+        // Statistiques par parti politique
+        $partyStats = [];
+        foreach (['pour', 'contre', 'abstention', 'non_votant'] as $position) {
+            $votesInPosition = $deputyVotes->get($position, collect());
+            $partyStats[$position] = $votesInPosition
+                ->groupBy(function($deputyVote) {
+                    return $deputyVote->deputy->groupe_politique ?? 'Sans parti';
+                })
+                ->map(function($votes, $party) {
+                    $deputy = $votes->first()->deputy;
+                    return [
+                        'party' => $party,
+                        'party_name' => $deputy->politicalGroup->nom ?? $party,
+                        'party_color' => $deputy->politicalGroup->couleur ?? '#808080',
+                        'count' => $votes->count(),
+                    ];
+                })
+                ->sortByDesc('count')
+                ->values();
+        }
+
         return Inertia::render('Votes/Show', [
             'vote' => $vote,
             'deputyVotes' => $deputyVotes,
             'stats' => $stats,
+            'partyStats' => $partyStats,
         ]);
     }
 }

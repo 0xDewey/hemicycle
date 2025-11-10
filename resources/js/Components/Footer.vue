@@ -137,8 +137,7 @@ const currentYear = new Date().getFullYear();
                     <p
                         class="text-sm text-gray-500 dark:text-gray-400 text-center md:text-left"
                     >
-                        © {{ currentYear }} Visibilité des Députés. Projet non
-                        officiel.
+                        © {{ currentYear }} HémiCycle. Projet non officiel.
                     </p>
                     <div class="flex items-center gap-4">
                         <a

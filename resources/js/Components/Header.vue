@@ -33,7 +33,7 @@ defineProps({
                         <h1
                             class="text-lg font-bold text-gray-900 dark:text-white"
                         >
-                            Visibilité des Députés
+                            HémiCycle
                         </h1>
                         <p class="text-xs text-gray-500 dark:text-gray-400">
                             17e législature
@@ -56,6 +56,13 @@ defineProps({
                     >
                         <Vote class="h-4 w-4" />
                         <span class="font-medium">Scrutins</span>
+                    </Link>
+                    <Link
+                        href="/parties"
+                        class="flex items-center gap-2 text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+                    >
+                        <Users class="h-4 w-4" />
+                        <span class="font-medium">Partis</span>
                     </Link>
                 </nav>
 

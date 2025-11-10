@@ -30,7 +30,8 @@ class SyncDeputiesCommand extends Command
     public function handle()
     {
         // URL par défaut ou URL personnalisée
-        $defaultUrl = 'https://www.data.gouv.fr/api/1/datasets/r/fff6c0df-c527-4c6d-824b-46dff71db0ec';
+        Deputy::truncate();
+        $defaultUrl = 'https://data.assemblee-nationale.fr/static/openData/repository/17/amo/deputes_actifs_mandats_actifs_organes_divises/AMO40_deputes_actifs_mandats_actifs_organes_divises.json.zip';
         $url = $this->option('url') ?: $defaultUrl;
 
         $this->info("📥 Téléchargement des données des députés actifs...");
@@ -75,9 +76,9 @@ class SyncDeputiesCommand extends Command
             }
 
             // Lire tous les fichiers JSON des députés
-            $jsonFiles = glob("$extractPath/json/acteur/*.json");
+            $jsonFiles = glob("$extractPath/acteur/*.json");
             if (empty($jsonFiles)) {
-                $this->error("❌ Aucun fichier JSON trouvé dans $extractPath/json/acteur/");
+                $this->error("❌ Aucun fichier JSON trouvé dans $extractPath/acteur/");
                 return 1;
             }
 
@@ -139,24 +140,44 @@ class SyncDeputiesCommand extends Command
                         }
                     }
 
-                    // Trouver le groupe politique actif et extraire le libellé
+                    // Trouver le parti politique (PARPOL) actif
                     $groupePolitique = null;
                     $groupePolitiqueAbrege = null;
+                    $parpolOrganeRef = null;
+                    
                     foreach ($mandats as $mandat) {
-                        if (($mandat['typeOrgane'] ?? '') === 'GP' && 
+                        if (($mandat['typeOrgane'] ?? '') === 'PARPOL' && 
                             (empty($mandat['dateFin']) || $mandat['dateFin'] === null)) {
-                            // Extraire le libellé complet et l'abrégé
-                            $libelle = $mandat['libelle'] ?? null;
-                            if ($libelle) {
-                                $groupePolitique = $libelle;
-                                // Extraire l'abréviation entre parenthèses ou prendre le premier mot
-                                if (preg_match('/\(([^)]+)\)/', $libelle, $matches)) {
-                                    $groupePolitiqueAbrege = $matches[1];
-                                } else {
-                                    $groupePolitiqueAbrege = explode(' ', $libelle)[0];
+                            $parpolOrganeRef = $mandat['organes']['organeRef'] ?? null;
+                            break;
+                        }
+                    }
+                    
+                    // Si un organe PARPOL est trouvé, charger ses informations
+                    if ($parpolOrganeRef) {
+                        $organeFile = "$extractPath/organe/{$parpolOrganeRef}.json";
+                        if (file_exists($organeFile)) {
+                            $organeData = json_decode(file_get_contents($organeFile), true);
+                            $organe = $organeData['organe'] ?? [];
+                            
+                            if (($organe['codeType'] ?? '') === 'PARPOL') {
+                                $groupePolitique = $organe['libelle'] ?? null;
+                                $groupePolitiqueAbrege = $organe['libelleAbrev'] ?? null;
+                                
+                                // Créer/mettre à jour le groupe politique dans la base de données
+                                if ($groupePolitique && $groupePolitiqueAbrege) {
+                                    \App\Models\PoliticalGroup::updateOrCreate(
+                                        ['uid' => $parpolOrganeRef],
+                                        [
+                                            'nom' => $groupePolitique,
+                                            'sigle' => $groupePolitiqueAbrege,
+                                            'couleur' => $this->getPartyColor($groupePolitiqueAbrege),
+                                            'libelle' => $groupePolitique,
+                                            'libelle_abrege' => $groupePolitiqueAbrege,
+                                        ]
+                                    );
                                 }
                             }
-                            break;
                         }
                     }
 
@@ -171,7 +192,7 @@ class SyncDeputiesCommand extends Command
                             'prenom' => $prenom,
                             'circonscription' => $lieu['numCirco'] ?? null,
                             'departement' => $lieu['numDepartement'] ?? null,
-                            'groupe_politique' => $groupePolitiqueAbrege ?: 'Non inscrit',
+                            'groupe_politique' => $groupePolitiqueAbrege ?: null,
                             'photo' => null, // À compléter ultérieurement
                             'slug' => \Str::slug($prenom . '-' . $nom),
                             'meta' => $acteur,
@@ -224,5 +245,33 @@ class SyncDeputiesCommand extends Command
             }
         }
         rmdir($dir);
+    }
+    
+    /**
+     * Obtenir une couleur par défaut pour un parti politique
+     */
+    private function getPartyColor($sigle)
+    {
+        // Couleurs approximatives des principaux partis français
+        $colors = [
+            'RN' => '#0d378a', // Rassemblement National - Bleu foncé
+            'LR' => '#0066cc', // Les Républicains - Bleu
+            'UDI' => '#00a8ff', // UDI - Bleu clair
+            'LIOT' => '#ffa500', // LIOT - Orange
+            'RE' => '#ffeb00', // Renaissance - Jaune
+            'DEM' => '#ff9900', // Démocrate - Orange clair
+            'HOR' => '#ffd700', // Horizons - Or
+            'ECO' => '#00c000', // Écologiste - Vert
+            'SOC' => '#ff1493', // Socialistes - Rose
+            'LFI' => '#c9462c', // La France Insoumise - Rouge
+            'FI' => '#c9462c', // France Insoumise - Rouge
+            'GDR' => '#dd0000', // Gauche démocrate et républicaine - Rouge foncé
+            'PCF' => '#dd0000', // Parti communiste français - Rouge
+            'PS' => '#ff1493', // Parti socialiste - Rose
+            'UMP' => '#0066cc', // Union pour un Mouvement Populaire - Bleu
+            'MODEM' => '#ff9900', // MoDem - Orange
+        ];
+
+        return $colors[strtoupper($sigle)] ?? '#808080'; // Gris par défaut
     }
 }

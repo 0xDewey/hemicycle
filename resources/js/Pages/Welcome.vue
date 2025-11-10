@@ -7,7 +7,16 @@ import CardDescription from "@/Components/ui/CardDescription.vue";
 import CardHeader from "@/Components/ui/CardHeader.vue";
 import CardTitle from "@/Components/ui/CardTitle.vue";
 import Button from "@/Components/ui/Button.vue";
-import { Users, Vote, Building2 } from "lucide-vue-next";
+import Badge from "@/Components/ui/Badge.vue";
+import {
+    Users,
+    Vote,
+    Building2,
+    TrendingUp,
+    Calendar,
+    CheckCircle,
+    XCircle,
+} from "lucide-vue-next";
 
 defineProps({
     canLogin: {
@@ -36,33 +45,55 @@ defineProps({
         type: Number,
         default: 0,
     },
+    recentVotes: {
+        type: Array,
+        default: () => [],
+    },
+    politicalGroups: {
+        type: Array,
+        default: () => [],
+    },
 });
+
+const formatDate = (date) => {
+    return new Date(date).toLocaleDateString("fr-FR", {
+        day: "numeric",
+        month: "long",
+        year: "numeric",
+    });
+};
+
+const getResultatBadge = (resultat) => {
+    return resultat === "adopté"
+        ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+        : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200";
+};
 </script>
 
 <template>
     <PublicLayout
-        title="Accueil - Visibilité des Députés"
+        title="Accueil"
         :can-login="canLogin"
         :can-register="canRegister"
     >
         <div class="w-full max-w-7xl mx-auto px-6 py-12">
             <!-- Hero Section -->
             <div class="text-center mb-16">
-                <h2
-                    class="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white mb-4"
+                <h1
+                    class="text-5xl md:text-6xl font-bold text-gray-900 dark:text-white mb-4"
                 >
-                    Explorez l'Assemblée Nationale
-                </h2>
+                    HémiCycle
+                </h1>
                 <p
                     class="text-xl text-gray-600 dark:text-gray-300 max-w-2xl mx-auto"
                 >
-                    Consultez les députés, leurs votes et leurs groupes
-                    politiques de la 17e législature.
+                    Suivez l'activité de l'Assemblée Nationale : députés,
+                    scrutins et groupes politiques de la 17e législature
                 </p>
             </div>
 
             <!-- Statistics Cards -->
-            <div class="grid gap-6 md:grid-cols-2 mb-12">
+            <div class="grid gap-6 md:grid-cols-3 mb-12">
                 <Card>
                     <CardHeader
                         class="flex flex-row items-center justify-between space-y-0 pb-2"
@@ -100,7 +131,173 @@ defineProps({
                         </p>
                     </CardContent>
                 </Card>
+
+                <Card>
+                    <CardHeader
+                        class="flex flex-row items-center justify-between space-y-0 pb-2"
+                    >
+                        <CardTitle class="text-sm font-medium"
+                            >Groupes Politiques</CardTitle
+                        >
+                        <Building2 class="h-4 w-4 text-muted-foreground" />
+                    </CardHeader>
+                    <CardContent>
+                        <div class="text-2xl font-bold">
+                            {{ politicalGroupsCount }}
+                        </div>
+                        <p class="text-xs text-muted-foreground">
+                            Partis représentés
+                        </p>
+                    </CardContent>
+                </Card>
             </div>
+
+            <!-- Recent Votes Section -->
+            <Card class="mb-12">
+                <CardHeader>
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <CardTitle class="text-2xl"
+                                >Derniers Scrutins</CardTitle
+                            >
+                            <CardDescription>
+                                Les 5 votes les plus récents de l'Assemblée
+                            </CardDescription>
+                        </div>
+                        <Link :href="route('votes.index')">
+                            <Button variant="outline" size="sm">
+                                Voir tout
+                            </Button>
+                        </Link>
+                    </div>
+                </CardHeader>
+                <CardContent>
+                    <div class="space-y-4">
+                        <Link
+                            v-for="vote in recentVotes"
+                            :key="vote.id"
+                            :href="`/votes/${vote.id}`"
+                            class="block border rounded-lg p-4 hover:bg-accent/50 transition-colors"
+                        >
+                            <div class="flex items-start justify-between gap-4">
+                                <div class="flex-1">
+                                    <div class="flex items-center gap-2 mb-2">
+                                        <Badge
+                                            variant="outline"
+                                            class="text-xs"
+                                        >
+                                            Scrutin n°{{ vote.numero }}
+                                        </Badge>
+                                        <Badge
+                                            :class="
+                                                getResultatBadge(vote.resultat)
+                                            "
+                                            class="text-xs"
+                                        >
+                                            {{ vote.resultat }}
+                                        </Badge>
+                                    </div>
+                                    <h3
+                                        class="font-semibold text-foreground mb-1"
+                                    >
+                                        {{ vote.titre }}
+                                    </h3>
+                                    <div
+                                        class="flex items-center gap-4 text-xs text-muted-foreground"
+                                    >
+                                        <span class="flex items-center gap-1">
+                                            <Calendar class="h-3 w-3" />
+                                            {{ formatDate(vote.date_scrutin) }}
+                                        </span>
+                                        <span class="text-green-600"
+                                            >Pour: {{ vote.pour }}</span
+                                        >
+                                        <span class="text-red-600"
+                                            >Contre: {{ vote.contre }}</span
+                                        >
+                                        <span class="text-gray-600"
+                                            >Abstention:
+                                            {{ vote.abstention }}</span
+                                        >
+                                    </div>
+                                </div>
+                            </div>
+                        </Link>
+
+                        <div
+                            v-if="recentVotes.length === 0"
+                            class="text-center py-8 text-muted-foreground"
+                        >
+                            Aucun scrutin récent
+                        </div>
+                    </div>
+                </CardContent>
+            </Card>
+
+            <!-- Political Groups Section -->
+            <Card class="mb-12">
+                <CardHeader>
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <CardTitle class="text-2xl"
+                                >Groupes Politiques</CardTitle
+                            >
+                            <CardDescription>
+                                Principaux groupes parlementaires
+                            </CardDescription>
+                        </div>
+                        <Link :href="route('parties.index')">
+                            <Button variant="outline" size="sm">
+                                Voir tout
+                            </Button>
+                        </Link>
+                    </div>
+                </CardHeader>
+                <CardContent>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <Link
+                            v-for="group in politicalGroups"
+                            :key="group.id"
+                            :href="`/parties/${group.id}`"
+                            class="flex items-center gap-3 p-4 border rounded-lg hover:bg-accent/50 transition-colors"
+                        >
+                            <div
+                                class="w-4 h-4 rounded-full flex-shrink-0"
+                                :style="{
+                                    backgroundColor: group.couleur_associee,
+                                }"
+                            ></div>
+                            <div class="flex-1 min-w-0">
+                                <p class="font-semibold truncate">
+                                    {{ group.libelle_abrege }}
+                                </p>
+                                <p
+                                    class="text-xs text-muted-foreground truncate"
+                                >
+                                    {{ group.libelle }}
+                                </p>
+                            </div>
+                            <div class="text-right">
+                                <p class="text-lg font-bold">
+                                    {{ group.deputies_count }}
+                                </p>
+                                <p class="text-xs text-muted-foreground">
+                                    député{{
+                                        group.deputies_count > 1 ? "s" : ""
+                                    }}
+                                </p>
+                            </div>
+                        </Link>
+
+                        <div
+                            v-if="politicalGroups.length === 0"
+                            class="col-span-2 text-center py-8 text-muted-foreground"
+                        >
+                            Aucun groupe politique
+                        </div>
+                    </div>
+                </CardContent>
+            </Card>
 
             <!-- Feature Cards -->
             <div class="grid gap-8 md:grid-cols-2">
@@ -131,8 +328,8 @@ defineProps({
                                 politique
                             </li>
                             <li>• Informations biographiques complètes</li>
-                            <li>• Historique des mandats</li>
-                            <li>• Consulter leurs votes individuels</li>
+                            <li>• Historique des votes individuels</li>
+                            <li>• Statistiques de participation</li>
                         </ul>
                         <Link :href="route('deputies.index')">
                             <Button class="w-full"> Voir les députés </Button>
@@ -164,7 +361,7 @@ defineProps({
                             <li>• Filtrer par type de scrutin et résultat</li>
                             <li>• Détails complets de chaque vote</li>
                             <li>• Répartition pour/contre/abstention</li>
-                            <li>• Voir les positions des députés</li>
+                            <li>• Visualisation par partis politiques</li>
                         </ul>
                         <Link :href="route('votes.index')">
                             <Button class="w-full" variant="secondary">

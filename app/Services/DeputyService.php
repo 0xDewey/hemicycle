@@ -94,6 +94,7 @@ class DeputyService
     public function getDepartmentStatistics(string $departmentCode): array
     {
         $deputies = Deputy::where('departement', $departmentCode)
+            ->with('politicalGroup')
             ->orderBy('nom')
             ->get();
 
@@ -117,7 +118,12 @@ class DeputyService
                 'full_name' => $deputy->full_name,
                 'group' => $deputy->groupe_politique,
                 'group_full' => $deputy->groupe_politique,
-                'group_color' => null, // Pourra être ajouté plus tard
+                'group_color' => $deputy->politicalGroup?->couleur_associee,
+                'political_group' => $deputy->politicalGroup ? [
+                    'sigle' => $deputy->politicalGroup->libelle_abrege,
+                    'nom' => $deputy->politicalGroup->libelle,
+                    'couleur' => $deputy->politicalGroup->couleur_associee,
+                ] : null,
                 'constituency' => $deputy->circonscription,
                 'photo' => $deputy->photo,
                 'slug' => $deputy->slug,
@@ -221,15 +227,28 @@ class DeputyService
             ->get()
             ->keyBy('date');
 
+        // Récupérer le nombre total de scrutins par jour (indépendamment du député)
+        $totalScrutins = DB::table('votes')
+            ->whereBetween('date_scrutin', [$startDate->format('Y-m-d'), $endDate->format('Y-m-d')])
+            ->select(
+                DB::raw('DATE(date_scrutin) as date'),
+                DB::raw('COUNT(*) as total_scrutins')
+            )
+            ->groupBy('date')
+            ->get()
+            ->keyBy('date');
+
         // Construire le tableau avec tous les jours, même ceux sans vote
         $result = [];
         for ($date = clone $startDate; $date <= $endDate; $date->addDay()) {
             $dateStr = $date->format('Y-m-d');
             $dayData = $votes->get($dateStr);
+            $scrutinsData = $totalScrutins->get($dateStr);
 
             $result[] = [
                 'date' => $dateStr,
                 'total_votes' => $dayData ? (int)$dayData->total_votes : 0,
+                'total_scrutins' => $scrutinsData ? (int)$scrutinsData->total_scrutins : 0,
                 'pour' => $dayData ? (int)$dayData->pour : 0,
                 'contre' => $dayData ? (int)$dayData->contre : 0,
                 'abstention' => $dayData ? (int)$dayData->abstention : 0,

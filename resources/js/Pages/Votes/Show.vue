@@ -7,6 +7,16 @@ import CardTitle from "@/Components/ui/CardTitle.vue";
 import CardContent from "@/Components/ui/CardContent.vue";
 import Button from "@/Components/ui/Button.vue";
 import Badge from "@/Components/ui/Badge.vue";
+import { Pie, Bar } from "vue-chartjs";
+import {
+    Chart as ChartJS,
+    ArcElement,
+    BarElement,
+    CategoryScale,
+    LinearScale,
+    Tooltip,
+    Legend,
+} from "chart.js";
 import {
     ArrowLeft,
     Users,
@@ -15,6 +25,16 @@ import {
     Minus,
     XCircle,
 } from "lucide-vue-next";
+
+// Register Chart.js components
+ChartJS.register(
+    ArcElement,
+    BarElement,
+    CategoryScale,
+    LinearScale,
+    Tooltip,
+    Legend
+);
 
 const props = defineProps({
     vote: {
@@ -29,9 +49,14 @@ const props = defineProps({
         type: Object,
         required: true,
     },
+    partyStats: {
+        type: Object,
+        required: true,
+    },
 });
 
 const selectedPosition = ref("all");
+const selectedView = ref("deputies"); // 'deputies' ou 'parties'
 
 const filteredDeputyVotes = computed(() => {
     if (selectedPosition.value === "all") {
@@ -75,6 +100,194 @@ const getPositionLabel = (position) => {
         non_votant: "Non votant",
     };
     return labels[position] || position;
+};
+
+// Chart.js data for overall vote distribution
+const overallVoteChartData = computed(() => {
+    return {
+        labels: ["Pour", "Contre", "Abstention", "Non votant"],
+        datasets: [
+            {
+                data: [
+                    props.stats.pour,
+                    props.stats.contre,
+                    props.stats.abstention,
+                    props.stats.non_votant,
+                ],
+                backgroundColor: [
+                    "rgba(34, 197, 94, 0.8)", // green-500
+                    "rgba(239, 68, 68, 0.8)", // red-500
+                    "rgba(156, 163, 175, 0.8)", // gray-400
+                    "rgba(251, 146, 60, 0.8)", // orange-400
+                ],
+                borderColor: [
+                    "rgba(34, 197, 94, 1)",
+                    "rgba(239, 68, 68, 1)",
+                    "rgba(156, 163, 175, 1)",
+                    "rgba(251, 146, 60, 1)",
+                ],
+                borderWidth: 2,
+            },
+        ],
+    };
+});
+
+const chartOptions = {
+    responsive: true,
+    maintainAspectRatio: true,
+    plugins: {
+        legend: {
+            position: "bottom",
+            labels: {
+                padding: 15,
+                font: {
+                    size: 12,
+                },
+            },
+        },
+        tooltip: {
+            callbacks: {
+                label: function (context) {
+                    const label = context.label || "";
+                    const value = context.parsed || 0;
+                    const total = context.dataset.data.reduce(
+                        (a, b) => a + b,
+                        0
+                    );
+                    const percentage = ((value / total) * 100).toFixed(1);
+                    return `${label}: ${value} (${percentage}%)`;
+                },
+            },
+        },
+    },
+};
+
+// Chart data for party vote distribution
+const getPartyChartData = (partyStats) => {
+    // Collect all unique parties and their votes by position
+    const partiesMap = new Map();
+
+    Object.keys(partyStats).forEach((position) => {
+        const stats = partyStats[position];
+        stats.forEach((stat) => {
+            if (!partiesMap.has(stat.party)) {
+                partiesMap.set(stat.party, {
+                    name: stat.party_name,
+                    color: stat.party_color,
+                    sigle: stat.party,
+                    pour: 0,
+                    contre: 0,
+                    abstention: 0,
+                    non_votant: 0,
+                });
+            }
+            partiesMap.get(stat.party)[position] = stat.count;
+        });
+    });
+
+    // Sort parties by total votes (descending)
+    const sortedParties = Array.from(partiesMap.values()).sort((a, b) => {
+        const totalA = a.pour + a.contre + a.abstention + a.non_votant;
+        const totalB = b.pour + b.contre + b.abstention + b.non_votant;
+        return totalB - totalA;
+    });
+
+    const labels = sortedParties.map((p) => p.sigle);
+
+    return {
+        labels,
+        datasets: [
+            {
+                label: "Pour",
+                data: sortedParties.map((p) => p.pour),
+                backgroundColor: "rgba(34, 197, 94, 0.8)",
+                borderColor: "rgba(34, 197, 94, 1)",
+                borderWidth: 1,
+            },
+            {
+                label: "Contre",
+                data: sortedParties.map((p) => p.contre),
+                backgroundColor: "rgba(239, 68, 68, 0.8)",
+                borderColor: "rgba(239, 68, 68, 1)",
+                borderWidth: 1,
+            },
+            {
+                label: "Abstention",
+                data: sortedParties.map((p) => p.abstention),
+                backgroundColor: "rgba(156, 163, 175, 0.8)",
+                borderColor: "rgba(156, 163, 175, 1)",
+                borderWidth: 1,
+            },
+            {
+                label: "Non votant",
+                data: sortedParties.map((p) => p.non_votant),
+                backgroundColor: "rgba(251, 146, 60, 0.8)",
+                borderColor: "rgba(251, 146, 60, 1)",
+                borderWidth: 1,
+            },
+        ],
+    };
+};
+
+const partyVoteChartData = computed(() => getPartyChartData(props.partyStats));
+
+const barChartOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    scales: {
+        x: {
+            stacked: true,
+            grid: {
+                display: false,
+            },
+            ticks: {
+                font: {
+                    size: 11,
+                },
+            },
+        },
+        y: {
+            stacked: true,
+            beginAtZero: true,
+            ticks: {
+                stepSize: 1,
+            },
+        },
+    },
+    plugins: {
+        legend: {
+            position: "top",
+            labels: {
+                padding: 15,
+                font: {
+                    size: 12,
+                },
+            },
+        },
+        tooltip: {
+            callbacks: {
+                label: function (context) {
+                    const label = context.dataset.label || "";
+                    const value = context.parsed.y || 0;
+                    return `${label}: ${value} député${value > 1 ? "s" : ""}`;
+                },
+                afterBody: function (items) {
+                    if (items.length === 0) return;
+
+                    // Calculate total deputies for this party
+                    const dataIndex = items[0].dataIndex;
+                    let total = 0;
+                    items[0].chart.data.datasets.forEach((dataset) => {
+                        total += dataset.data[dataIndex] || 0;
+                    });
+
+                    return `\nTotal du parti: ${total} député${
+                        total > 1 ? "s" : ""
+                    }`;
+                },
+            },
+        },
+    },
 };
 </script>
 
@@ -138,45 +351,84 @@ const getPositionLabel = (position) => {
                     </div>
 
                     <!-- Vote Stats -->
-                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-                        <div class="p-4 bg-green-50 rounded-lg">
-                            <p class="text-sm text-green-600 font-medium">
-                                Pour
-                            </p>
-                            <p class="text-3xl font-bold text-green-700">
-                                {{ vote.pour }}
-                            </p>
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                        <!-- Stats Grid -->
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="p-4 bg-green-50 rounded-lg">
+                                <p class="text-sm text-green-600 font-medium">
+                                    Pour
+                                </p>
+                                <p class="text-3xl font-bold text-green-700">
+                                    {{ vote.pour }}
+                                </p>
+                            </div>
+                            <div class="p-4 bg-red-50 rounded-lg">
+                                <p class="text-sm text-red-600 font-medium">
+                                    Contre
+                                </p>
+                                <p class="text-3xl font-bold text-red-700">
+                                    {{ vote.contre }}
+                                </p>
+                            </div>
+                            <div class="p-4 bg-gray-50 rounded-lg">
+                                <p class="text-sm text-gray-600 font-medium">
+                                    Abstentions
+                                </p>
+                                <p class="text-3xl font-bold text-gray-700">
+                                    {{ vote.abstention }}
+                                </p>
+                            </div>
+                            <div class="p-4 bg-orange-50 rounded-lg">
+                                <p class="text-sm text-orange-600 font-medium">
+                                    Non votants
+                                </p>
+                                <p class="text-3xl font-bold text-orange-700">
+                                    {{ stats.non_votant }}
+                                </p>
+                            </div>
                         </div>
-                        <div class="p-4 bg-red-50 rounded-lg">
-                            <p class="text-sm text-red-600 font-medium">
-                                Contre
-                            </p>
-                            <p class="text-3xl font-bold text-red-700">
-                                {{ vote.contre }}
-                            </p>
-                        </div>
-                        <div class="p-4 bg-gray-50 rounded-lg">
-                            <p class="text-sm text-gray-600 font-medium">
-                                Abstentions
-                            </p>
-                            <p class="text-3xl font-bold text-gray-700">
-                                {{ vote.abstention }}
-                            </p>
-                        </div>
-                        <div class="p-4 bg-orange-50 rounded-lg">
-                            <p class="text-sm text-orange-600 font-medium">
-                                Non votants
-                            </p>
-                            <p class="text-3xl font-bold text-orange-700">
-                                {{ stats.non_votant }}
-                            </p>
+
+                        <!-- Overall Vote Chart -->
+                        <div
+                            class="bg-white dark:bg-gray-800 p-6 rounded-lg border"
+                        >
+                            <h3 class="font-semibold mb-4 text-center">
+                                Répartition des votes
+                            </h3>
+                            <div class="max-w-sm mx-auto">
+                                <Pie
+                                    :data="overallVoteChartData"
+                                    :options="chartOptions"
+                                />
+                            </div>
                         </div>
                     </div>
                 </CardContent>
             </Card>
 
-            <!-- Filter by Position -->
-            <div class="mb-6">
+            <!-- View Toggle & Filter -->
+            <div class="mb-6 flex flex-wrap gap-4">
+                <div class="flex gap-2">
+                    <Button
+                        :variant="
+                            selectedView === 'deputies' ? 'default' : 'outline'
+                        "
+                        @click="selectedView = 'deputies'"
+                    >
+                        <Users class="h-4 w-4 mr-2" />
+                        Par députés
+                    </Button>
+                    <Button
+                        :variant="
+                            selectedView === 'parties' ? 'default' : 'outline'
+                        "
+                        @click="selectedView = 'parties'"
+                    >
+                        <Users class="h-4 w-4 mr-2" />
+                        Par partis
+                    </Button>
+                </div>
+
                 <select
                     v-model="selectedPosition"
                     class="px-4 py-2 rounded-md border border-input bg-background"
@@ -193,8 +445,94 @@ const getPositionLabel = (position) => {
                 </select>
             </div>
 
+            <!-- Party Stats View -->
+            <div v-if="selectedView === 'parties'" class="space-y-6">
+                <!-- Party Vote Distribution Chart -->
+                <Card>
+                    <CardHeader>
+                        <CardTitle class="text-center">
+                            Répartition des votes par parti politique
+                        </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <div class="h-96">
+                            <Bar
+                                :data="partyVoteChartData"
+                                :options="barChartOptions"
+                            />
+                        </div>
+                    </CardContent>
+                </Card>
+
+                <!-- Party Stats by Position -->
+                <div
+                    v-for="(stats, position) in partyStats"
+                    :key="position"
+                    v-show="
+                        selectedPosition === 'all' ||
+                        selectedPosition === position
+                    "
+                >
+                    <Card>
+                        <CardHeader>
+                            <div class="flex items-center gap-3">
+                                <span
+                                    :class="[
+                                        'px-3 py-1 rounded-full text-sm font-medium',
+                                        getPositionBadge(position),
+                                    ]"
+                                >
+                                    {{ getPositionLabel(position) }}
+                                </span>
+                            </div>
+                        </CardHeader>
+                        <CardContent>
+                            <div class="space-y-3">
+                                <div
+                                    v-for="party in stats"
+                                    :key="party.party"
+                                    class="flex items-center justify-between p-4 border rounded-lg hover:bg-accent/50 transition-colors"
+                                >
+                                    <div class="flex items-center gap-3">
+                                        <div
+                                            class="w-4 h-4 rounded-full"
+                                            :style="{
+                                                backgroundColor:
+                                                    party.party_color,
+                                            }"
+                                        ></div>
+                                        <div>
+                                            <p class="font-medium">
+                                                {{ party.party_name }}
+                                            </p>
+                                            <p
+                                                class="text-sm text-muted-foreground"
+                                            >
+                                                {{ party.party }}
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <div class="text-right">
+                                        <p class="text-2xl font-bold">
+                                            {{ party.count }}
+                                        </p>
+                                        <p
+                                            class="text-sm text-muted-foreground"
+                                        >
+                                            député{{
+                                                party.count > 1 ? "s" : ""
+                                            }}
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </CardContent>
+                    </Card>
+                </div>
+            </div>
+
             <!-- Deputy Votes by Position -->
-            <div class="space-y-6">
+            <div v-else class="space-y-6">
                 <div
                     v-for="(deputies, position) in filteredDeputyVotes"
                     :key="position"
@@ -299,6 +637,19 @@ const getPositionLabel = (position) => {
                                                 class="text-xs bg-purple-100 text-purple-800 px-2 py-1 rounded"
                                             >
                                                 Membre du gouvernement
+                                            </span>
+                                        </div>
+                                        <div
+                                            v-if="
+                                                deputyVote.cause_position ===
+                                                'PAN'
+                                            "
+                                            class="mt-2"
+                                        >
+                                            <span
+                                                class="text-xs bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200 px-2 py-1 rounded"
+                                            >
+                                                Président(e) de l'Assemblée nationale
                                             </span>
                                         </div>
                                     </Link>

@@ -27,6 +27,11 @@ class SyncVotesCommand extends Command
     protected $description = 'Synchronise les données des scrutins depuis l\'Assemblée nationale';
 
     /**
+     * Cache des députés pour éviter les requêtes répétées
+     */
+    private $deputiesCache = [];
+
+    /**
      * Execute the console command.
      */
     public function handle()
@@ -78,6 +83,14 @@ class SyncVotesCommand extends Command
 
             $this->info("📊 Synchronisation de " . count($jsonFiles) . " scrutins...");
 
+            // Charger tous les députés en cache une seule fois
+            $this->info("📋 Chargement des députés en cache...");
+            $deputies = Deputy::all();
+            foreach ($deputies as $deputy) {
+                $this->deputiesCache[$deputy->uid] = $deputy->id;
+            }
+            $this->info("✓ " . count($this->deputiesCache) . " députés en cache");
+
             $bar = $this->output->createProgressBar(count($jsonFiles));
             $bar->start();
 
@@ -86,9 +99,12 @@ class SyncVotesCommand extends Command
 
             foreach ($jsonFiles as $jsonFile) {
                 try {
+                    DB::beginTransaction();
+                    
                     $data = json_decode(file_get_contents($jsonFile), true);
                     
                     if (!isset($data['scrutin'])) {
+                        DB::rollBack();
                         $bar->advance();
                         continue;
                     }
@@ -97,6 +113,7 @@ class SyncVotesCommand extends Command
                     $uid = $scrutin['uid'] ?? null;
 
                     if (!$uid) {
+                        DB::rollBack();
                         $bar->advance();
                         continue;
                     }
@@ -150,7 +167,10 @@ class SyncVotesCommand extends Command
                     $deputyVotesImported = $this->importDeputyVotes($vote, $scrutin);
                     $countDeputyVotes += $deputyVotesImported;
 
+                    DB::commit();
+
                 } catch (\Exception $e) {
+                    DB::rollBack();
                     $this->warn("⚠ Erreur pour " . basename($jsonFile) . " : " . $e->getMessage());
                 }
 
@@ -183,7 +203,7 @@ class SyncVotesCommand extends Command
      */
     private function importDeputyVotes(Vote $vote, array $scrutin): int
     {
-        $count = 0;
+        $deputyVotesData = [];
         $ventilation = $scrutin['ventilationVotes']['organe']['groupes']['groupe'] ?? [];
 
         foreach ($ventilation as $groupe) {
@@ -196,7 +216,7 @@ class SyncVotesCommand extends Command
                 if (isset($votants['acteurRef'])) {
                     $votants = [$votants];
                 }
-                $count += $this->processVotants($vote, $votants, 'pour');
+                $this->collectVotants($vote, $votants, 'pour', $deputyVotesData);
             }
 
             // Traiter les votes "contre"
@@ -205,7 +225,7 @@ class SyncVotesCommand extends Command
                 if (isset($votants['acteurRef'])) {
                     $votants = [$votants];
                 }
-                $count += $this->processVotants($vote, $votants, 'contre');
+                $this->collectVotants($vote, $votants, 'contre', $deputyVotesData);
             }
 
             // Traiter les abstentions
@@ -214,7 +234,7 @@ class SyncVotesCommand extends Command
                 if (isset($votants['acteurRef'])) {
                     $votants = [$votants];
                 }
-                $count += $this->processVotants($vote, $votants, 'abstention');
+                $this->collectVotants($vote, $votants, 'abstention', $deputyVotesData);
             }
 
             // Traiter les non-votants
@@ -223,19 +243,30 @@ class SyncVotesCommand extends Command
                 if (isset($votants['acteurRef'])) {
                     $votants = [$votants];
                 }
-                $count += $this->processVotants($vote, $votants, 'non_votant');
+                $this->collectVotants($vote, $votants, 'non_votant', $deputyVotesData);
             }
         }
 
-        return $count;
+        // Batch insert/update tous les votes en une seule fois
+        if (!empty($deputyVotesData)) {
+            // Supprimer les votes existants pour ce scrutin
+            DeputyVote::where('vote_id', $vote->id)->delete();
+            
+            // Insérer tous les nouveaux votes par batch
+            foreach (array_chunk($deputyVotesData, 500) as $chunk) {
+                DeputyVote::insert($chunk);
+            }
+        }
+
+        return count($deputyVotesData);
     }
 
     /**
-     * Traiter une liste de votants
+     * Collecter les votants dans un tableau pour batch insert
      */
-    private function processVotants(Vote $vote, array $votants, string $position): int
+    private function collectVotants(Vote $vote, array $votants, string $position, array &$deputyVotesData): void
     {
-        $count = 0;
+        $now = now();
 
         foreach ($votants as $votant) {
             try {
@@ -244,34 +275,29 @@ class SyncVotesCommand extends Command
                     continue;
                 }
 
-                // Trouver le député correspondant
-                $deputy = Deputy::where('uid', $acteurRef)->first();
-                if (!$deputy) {
+                // Utiliser le cache au lieu d'une requête
+                if (!isset($this->deputiesCache[$acteurRef])) {
                     continue;
                 }
 
-                DeputyVote::updateOrCreate(
-                    [
-                        'deputy_id' => $deputy->id,
-                        'vote_id' => $vote->id,
-                    ],
-                    [
-                        'acteur_ref' => $acteurRef,
-                        'mandat_ref' => $votant['mandatRef'] ?? null,
-                        'position' => $position,
-                        'cause_position' => $votant['causePositionVote'] ?? null,
-                        'par_delegation' => ($votant['parDelegation'] ?? 'false') === 'true',
-                        'num_place' => $votant['numPlace'] ?? null,
-                    ]
-                );
+                $deputyId = $this->deputiesCache[$acteurRef];
 
-                $count++;
+                $deputyVotesData[] = [
+                    'deputy_id' => $deputyId,
+                    'vote_id' => $vote->id,
+                    'acteur_ref' => $acteurRef,
+                    'mandat_ref' => $votant['mandatRef'] ?? null,
+                    'position' => $position,
+                    'cause_position' => $votant['causePositionVote'] ?? null,
+                    'par_delegation' => ($votant['parDelegation'] ?? 'false') === 'true',
+                    'num_place' => $votant['numPlace'] ?? null,
+                    'created_at' => $now,
+                    'updated_at' => $now,
+                ];
             } catch (\Exception $e) {
                 // Ignorer les erreurs individuelles
             }
         }
-
-        return $count;
     }
 
     /**

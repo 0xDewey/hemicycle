@@ -6,8 +6,20 @@ use Inertia\Inertia;
 use App\Http\Controllers\DeputyController;
 use App\Http\Controllers\DeputyVoteController;
 use App\Http\Controllers\VoteController;
+use App\Http\Controllers\PoliticalGroupController;
 
 Route::get('/', function () {
+    // Récupérer les 5 derniers scrutins
+    $recentVotes = \App\Models\Vote::orderBy('date_scrutin', 'desc')
+        ->take(5)
+        ->get(['id', 'numero', 'titre', 'date_scrutin', 'resultat', 'pour', 'contre', 'abstention']);
+    
+    // Récupérer les partis politiques avec le nombre de députés
+    $politicalGroups = \App\Models\PoliticalGroup::withCount('deputies')
+        ->orderBy('deputies_count', 'desc')
+        ->take(10)
+        ->get(['id', 'libelle_abrege', 'libelle', 'couleur_associee']);
+
     return Inertia::render('Welcome', [
         'canLogin' => Route::has('login'),
         'canRegister' => Route::has('register'),
@@ -16,6 +28,8 @@ Route::get('/', function () {
         'deputiesCount' => \App\Models\Deputy::count(),
         'votesCount' => \App\Models\Vote::count(),
         'politicalGroupsCount' => \App\Models\PoliticalGroup::count(),
+        'recentVotes' => $recentVotes,
+        'politicalGroups' => $politicalGroups,
     ]);
 });
 
@@ -37,6 +51,13 @@ Route::prefix('deputies')->name('deputies.')->group(function () {
 Route::prefix('votes')->name('votes.')->group(function () {
     Route::get('/', [VoteController::class, 'index'])->name('index');
     Route::get('/{vote}', [VoteController::class, 'show'])->name('show');
+});
+
+// Routes pour les partis politiques
+Route::prefix('parties')->name('parties.')->group(function () {
+    Route::get('/', [PoliticalGroupController::class, 'index'])->name('index');
+    Route::get('/{politicalGroup}', [PoliticalGroupController::class, 'show'])->name('show');
+    Route::get('/{politicalGroup}/votes', [PoliticalGroupController::class, 'votes'])->name('votes');
 });
 
 // Routes pour les votes des députés

@@ -15,30 +15,25 @@ class DeputyVoteController extends Controller
      */
     public function show(Deputy $deputy)
     {
+        // Charger la relation politicalGroup
+        $deputy->load('politicalGroup');
+        
         $votes = DeputyVote::with('vote')
-            ->where('deputy_id', $deputy->id)
-            ->latest('created_at')
+            ->forDeputy($deputy->id)
+            ->orderByVoteDate()
             ->paginate(20);
 
         // Statistiques
         $stats = [
-            'total' => DeputyVote::where('deputy_id', $deputy->id)->count(),
-            'pour' => DeputyVote::where('deputy_id', $deputy->id)->where('position', 'pour')->count(),
-            'contre' => DeputyVote::where('deputy_id', $deputy->id)->where('position', 'contre')->count(),
-            'abstention' => DeputyVote::where('deputy_id', $deputy->id)->where('position', 'abstention')->count(),
-            'non_votant' => DeputyVote::where('deputy_id', $deputy->id)->where('position', 'non_votant')->count(),
-        ];
-
-        // Ajouter les informations de groupe au député
-        $deputyData = $deputy->toArray();
-        $deputyData['political_group'] = [
-            'libelle' => $deputy->groupe_politique,
-            'libelle_abrege' => $deputy->groupe_politique,
-            'couleur_associee' => null,
+            'total' => DeputyVote::forDeputy($deputy->id)->count(),
+            'pour' => DeputyVote::forDeputy($deputy->id)->where('position', 'pour')->count(),
+            'contre' => DeputyVote::forDeputy($deputy->id)->where('position', 'contre')->count(),
+            'abstention' => DeputyVote::forDeputy($deputy->id)->where('position', 'abstention')->count(),
+            'non_votant' => DeputyVote::forDeputy($deputy->id)->where('position', 'non_votant')->count(),
         ];
 
         return Inertia::render('Deputies/Votes', [
-            'deputy' => $deputyData,
+            'deputy' => $deputy,
             'votes' => $votes,
             'stats' => $stats,
         ]);
@@ -50,7 +45,7 @@ class DeputyVoteController extends Controller
     public function api(Deputy $deputy, Request $request)
     {
         $query = DeputyVote::with('vote')
-            ->where('deputy_id', $deputy->id);
+            ->forDeputy($deputy->id);
 
         // Filtrer par position si demandé
         if ($position = $request->get('position')) {
@@ -58,19 +53,24 @@ class DeputyVoteController extends Controller
         }
 
         // Trier
-        $sortBy = $request->get('sort_by', 'created_at');
+        $sortBy = $request->get('sort_by', 'date_scrutin');
         $sortOrder = $request->get('sort_order', 'desc');
-        $query->orderBy($sortBy, $sortOrder);
+        
+        if ($sortBy === 'date_scrutin') {
+            $query->orderByVoteDate($sortOrder);
+        } else {
+            $query->orderBy($sortBy, $sortOrder);
+        }
 
         $votes = $query->paginate($request->get('per_page', 20));
 
         // Statistiques
         $stats = [
-            'total' => DeputyVote::where('deputy_id', $deputy->id)->count(),
-            'pour' => DeputyVote::where('deputy_id', $deputy->id)->where('position', 'pour')->count(),
-            'contre' => DeputyVote::where('deputy_id', $deputy->id)->where('position', 'contre')->count(),
-            'abstention' => DeputyVote::where('deputy_id', $deputy->id)->where('position', 'abstention')->count(),
-            'non_votant' => DeputyVote::where('deputy_id', $deputy->id)->where('position', 'non_votant')->count(),
+            'total' => DeputyVote::forDeputy($deputy->id)->count(),
+            'pour' => DeputyVote::forDeputy($deputy->id)->where('position', 'pour')->count(),
+            'contre' => DeputyVote::forDeputy($deputy->id)->where('position', 'contre')->count(),
+            'abstention' => DeputyVote::forDeputy($deputy->id)->where('position', 'abstention')->count(),
+            'non_votant' => DeputyVote::forDeputy($deputy->id)->where('position', 'non_votant')->count(),
         ];
 
         return response()->json([

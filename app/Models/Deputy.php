@@ -47,7 +47,7 @@ class Deputy extends Model
      */
     public function politicalGroup(): BelongsTo
     {
-        return $this->belongsTo(PoliticalGroup::class, 'groupe_politique', 'uid');
+        return $this->belongsTo(PoliticalGroup::class, 'groupe_politique', 'sigle');
     }
 
     /**

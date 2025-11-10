@@ -41,6 +41,23 @@ defineProps({
                 </CardHeader>
                 <CardContent>
                     <div class="space-y-2">
+                        <div v-if="deputy.political_group" class="mb-3">
+                            <div class="flex items-center gap-2">
+                                <div
+                                    class="w-3 h-3 rounded-full"
+                                    :style="{
+                                        backgroundColor:
+                                            deputy.political_group.couleur,
+                                    }"
+                                ></div>
+                                <span class="text-sm font-medium">
+                                    {{ deputy.political_group.sigle }}
+                                </span>
+                            </div>
+                            <p class="text-xs text-muted-foreground mt-1">
+                                {{ deputy.political_group.nom }}
+                            </p>
+                        </div>
                         <div v-if="deputy.constituency" class="text-sm">
                             <span class="font-medium text-muted-foreground"
                                 >Circonscription :</span

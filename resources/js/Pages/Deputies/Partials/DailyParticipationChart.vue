@@ -52,12 +52,20 @@ const getBarHeight = (votes) => {
     return Math.max(minBarHeightWithVote, calculatedHeight);
 };
 
-const getBarColor = (votes) => {
-    if (votes === 0) return "bg-red-400 dark:bg-red-600";
-    if (votes >= maxVotes.value * 0.7) return "bg-green-500 dark:bg-green-600";
-    if (votes >= maxVotes.value * 0.4)
-        return "bg-yellow-500 dark:bg-yellow-600";
-    return "bg-orange-500 dark:bg-orange-600";
+const getBarColor = (day) => {
+    // Si pas de scrutins ce jour, pas de barre
+    if (day.total_scrutins === 0) return "bg-gray-300 dark:bg-gray-700";
+
+    // Si pas de votes du député mais des scrutins, c'est rouge (absence)
+    if (day.total_votes === 0) return "bg-red-400 dark:bg-red-600";
+
+    // Calculer le ratio de participation
+    const participationRatio = day.total_votes / day.total_scrutins;
+
+    // Couleur basée sur le ratio de participation
+    if (participationRatio === 1) return "bg-green-500 dark:bg-green-600"; // 100% de participation
+    if (participationRatio >= 0.7) return "bg-yellow-500 dark:bg-yellow-600"; // 70-99%
+    return "bg-orange-500 dark:bg-orange-600"; // Moins de 70%
 };
 
 const formatDate = (dateStr) => {
@@ -154,21 +162,42 @@ onMounted(async () => {
                 </div>
 
                 <!-- Graphique -->
-                <div class="overflow-x-auto flex justify-center">
-                    <div class="min-w-[600px] w-11/12">
+                <div class="overflow-x-auto">
+                    <div
+                        class="min-h-[400px] min-w-[600px] w-full flex flex-col items-center justify-center"
+                    >
                         <div
-                            class="flex items-end justify-between gap-1 h-64 mb-2"
+                            class="flex items-end justify-center gap-1 h-64 mb-2 w-11/12"
                         >
                             <div
                                 v-for="day in data"
                                 :key="day.date"
                                 class="flex-1 flex flex-col items-center group relative"
                             >
+                                <!-- Indicateur de scrutins -->
+                                <div
+                                    class="h-6 flex items-center justify-center mb-1"
+                                >
+                                    <div
+                                        v-if="day.total_scrutins > 0"
+                                        :class="[
+                                            'text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center',
+                                            day.total_votes ===
+                                            day.total_scrutins
+                                                ? 'bg-blue-500 text-white'
+                                                : 'bg-blue-200 text-blue-800 dark:bg-blue-800 dark:text-blue-200',
+                                        ]"
+                                        :title="`${day.total_scrutins} scrutin(s) ce jour`"
+                                    >
+                                        {{ day.total_scrutins }}
+                                    </div>
+                                </div>
+
                                 <div class="flex-1 flex items-end w-full">
                                     <div
                                         :class="[
                                             'w-full rounded-t transition-all duration-200 group-hover:opacity-80',
-                                            getBarColor(day.total_votes),
+                                            getBarColor(day),
                                         ]"
                                         :style="{
                                             height:
@@ -192,6 +221,18 @@ onMounted(async () => {
                                             {{ day.total_votes }} vote{{
                                                 day.total_votes > 1 ? "s" : ""
                                             }}
+                                            <span
+                                                v-if="day.total_scrutins > 0"
+                                                class="text-gray-300"
+                                            >
+                                                /
+                                                {{ day.total_scrutins }}
+                                                scrutin{{
+                                                    day.total_scrutins > 1
+                                                        ? "s"
+                                                        : ""
+                                                }}
+                                            </span>
                                         </div>
                                         <div
                                             v-if="day.total_votes > 0"
@@ -214,7 +255,7 @@ onMounted(async () => {
 
                         <!-- Axe des dates -->
                         <div
-                            class="flex justify-between gap-1 text-xs text-muted-foreground"
+                            class="flex justify-center gap-1 text-xs text-muted-foreground w-11/12"
                         >
                             <div
                                 v-for="(day, index) in data"
@@ -238,24 +279,22 @@ onMounted(async () => {
                 <div class="flex flex-wrap gap-4 mt-6 text-sm">
                     <div class="flex items-center gap-2">
                         <div
-                            class="w-4 h-4 bg-red-400 dark:bg-red-600 rounded"
-                        ></div>
-                        <span class="text-muted-foreground">Aucun vote</span>
-                    </div>
-                    <div class="flex items-center gap-2">
-                        <div
-                            class="w-4 h-4 bg-orange-500 dark:bg-orange-600 rounded"
-                        ></div>
+                            class="w-5 h-5 bg-blue-500 text-white text-xs rounded-full flex items-center justify-center font-bold"
+                        >
+                            N
+                        </div>
                         <span class="text-muted-foreground"
-                            >Participation faible</span
+                            >Nombre de scrutins (participation complète)</span
                         >
                     </div>
                     <div class="flex items-center gap-2">
                         <div
-                            class="w-4 h-4 bg-yellow-500 dark:bg-yellow-600 rounded"
-                        ></div>
+                            class="w-5 h-5 bg-blue-200 text-blue-800 text-xs rounded-full flex items-center justify-center font-bold"
+                        >
+                            N
+                        </div>
                         <span class="text-muted-foreground"
-                            >Participation moyenne</span
+                            >Nombre de scrutins (participation partielle)</span
                         >
                     </div>
                     <div class="flex items-center gap-2">
@@ -263,7 +302,31 @@ onMounted(async () => {
                             class="w-4 h-4 bg-green-500 dark:bg-green-600 rounded"
                         ></div>
                         <span class="text-muted-foreground"
-                            >Participation élevée</span
+                            >100% de participation</span
+                        >
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <div
+                            class="w-4 h-4 bg-yellow-500 dark:bg-yellow-600 rounded"
+                        ></div>
+                        <span class="text-muted-foreground"
+                            >70-99% de participation</span
+                        >
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <div
+                            class="w-4 h-4 bg-orange-500 dark:bg-orange-600 rounded"
+                        ></div>
+                        <span class="text-muted-foreground"
+                            >Moins de 70% de participation</span
+                        >
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <div
+                            class="w-4 h-4 bg-red-400 dark:bg-red-600 rounded"
+                        ></div>
+                        <span class="text-muted-foreground"
+                            >Aucun vote (absence)</span
                         >
                     </div>
                 </div>

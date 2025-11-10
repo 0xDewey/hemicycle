@@ -93,6 +93,23 @@ const formatDate = (date) => {
                                 {{ deputy.departement }} -
                                 {{ deputy.circonscription }}e circonscription
                             </span>
+                            <span
+                                v-if="deputy.political_group"
+                                class="flex items-center gap-2"
+                            >
+                                <span>•</span>
+                                <div
+                                    class="w-3 h-3 rounded-full"
+                                    :style="{
+                                        backgroundColor:
+                                            deputy.political_group
+                                                .couleur_associee,
+                                    }"
+                                ></div>
+                                <span :title="deputy.political_group.libelle">
+                                    {{ deputy.political_group.libelle_abrege }}
+                                </span>
+                            </span>
                         </div>
                     </div>
                 </div>
@@ -205,6 +222,15 @@ const formatDate = (date) => {
                                             class="px-2 py-1 rounded text-xs font-medium bg-purple-100 text-purple-800"
                                         >
                                             Membre du gouvernement
+                                        </span>
+                                        <span
+                                            v-if="
+                                                deputyVote.cause_position ===
+                                                'PAN'
+                                            "
+                                            class="px-2 py-1 rounded text-xs font-medium bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200"
+                                        >
+                                            Président(e) de l'Assemblée nationale
                                         </span>
                                     </div>
                                     <h3

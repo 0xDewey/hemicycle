@@ -9,6 +9,9 @@ class PoliticalGroup extends Model
 {
     protected $fillable = [
         'uid',
+        'nom',
+        'sigle',
+        'couleur',
         'code',
         'libelle',
         'libelle_abrege',
@@ -32,6 +35,6 @@ class PoliticalGroup extends Model
      */
     public function deputies(): HasMany
     {
-        return $this->hasMany(Deputy::class, 'groupe_politique', 'uid');
+        return $this->hasMany(Deputy::class, 'groupe_politique', 'sigle');
     }
 }

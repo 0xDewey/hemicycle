@@ -37,4 +37,23 @@ class DeputyVote extends Model
     {
         return $this->belongsTo(Vote::class);
     }
+
+    /**
+     * Scope pour trier par date de scrutin (plus récent en premier)
+     */
+    public function scopeOrderByVoteDate($query, $direction = 'desc')
+    {
+        return $query
+            ->join('votes', 'deputy_votes.vote_id', '=', 'votes.id')
+            ->orderBy('votes.date_scrutin', $direction)
+            ->select('deputy_votes.*');
+    }
+
+    /**
+     * Scope pour filtrer par député
+     */
+    public function scopeForDeputy($query, $deputyId)
+    {
+        return $query->where('deputy_id', $deputyId);
+    }
 }
