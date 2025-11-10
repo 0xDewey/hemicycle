@@ -230,7 +230,8 @@ const formatDate = (date) => {
                                             "
                                             class="px-2 py-1 rounded text-xs font-medium bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200"
                                         >
-                                            Président(e) de l'Assemblée nationale
+                                            Président(e) de l'Assemblée
+                                            nationale
                                         </span>
                                     </div>
                                     <h3

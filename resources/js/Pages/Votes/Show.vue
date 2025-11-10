@@ -649,7 +649,8 @@ const barChartOptions = {
                                             <span
                                                 class="text-xs bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200 px-2 py-1 rounded"
                                             >
-                                                Président(e) de l'Assemblée nationale
+                                                Président(e) de l'Assemblée
+                                                nationale
                                             </span>
                                         </div>
                                     </Link>
