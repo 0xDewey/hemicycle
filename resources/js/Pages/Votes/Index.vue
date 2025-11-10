@@ -212,12 +212,6 @@ const getResultatBadge = (resultat) => {
                                 <CardTitle class="text-lg mb-2">
                                     {{ vote.titre }}
                                 </CardTitle>
-                                <p
-                                    v-if="vote.description"
-                                    class="text-sm text-muted-foreground line-clamp-2"
-                                >
-                                    {{ vote.description }}
-                                </p>
                             </div>
                             <div class="flex flex-col items-end gap-2">
                                 <span

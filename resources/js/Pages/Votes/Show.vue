@@ -338,13 +338,6 @@ const barChartOptions = {
                     </div>
                 </CardHeader>
                 <CardContent>
-                    <div v-if="vote.description" class="mb-6">
-                        <h3 class="font-semibold mb-2">Description</h3>
-                        <p class="text-muted-foreground">
-                            {{ vote.description }}
-                        </p>
-                    </div>
-
                     <div v-if="vote.type" class="mb-6">
                         <h3 class="font-semibold mb-2">Type de vote</h3>
                         <p class="text-muted-foreground">{{ vote.type }}</p>
