@@ -284,6 +284,7 @@ class SyncDeputiesCommand extends Command
             'SOC' => '#FF8080', // Socialistes et apparentés - Rose
             'PS' => '#FF8080', // Parti socialiste - Rose
             'GDR' => '#DD0000', // Gauche démocrate et républicaine - NUPES - Rouge
+            'RPS' => '#681F62', // Régions et Peuples Solidaires - Violet
             
             // Gauche radicale
             'LFI' => '#CC2443', // La France Insoumise - NUPES - Rouge carmin
