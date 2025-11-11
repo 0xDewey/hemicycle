@@ -1,3 +1,6 @@
+/* Tarteaucitron personnalisation */
+@import "./tarteaucitron-custom.css";
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;

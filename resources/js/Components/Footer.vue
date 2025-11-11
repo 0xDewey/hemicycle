@@ -1,6 +1,6 @@
 <script setup>
 import { Link } from "@inertiajs/vue3";
-import { Building2, Github, Mail, ExternalLink } from "lucide-vue-next";
+import { Building2, Github, Mail, ExternalLink, Coffee } from "lucide-vue-next";
 
 const currentYear = new Date().getFullYear();
 </script>
@@ -134,21 +134,32 @@ const currentYear = new Date().getFullYear();
                 <div
                     class="flex flex-col md:flex-row justify-between items-center gap-4"
                 >
-                    <p
-                        class="text-sm text-gray-500 dark:text-gray-400 text-center md:text-left"
-                    >
-                        © {{ currentYear }} HémiCycle. Projet non officiel.
-                    </p>
+                    <div class="flex flex-col md:flex-row items-center gap-4">
+                        <p
+                            class="text-sm text-gray-500 dark:text-gray-400 text-center md:text-left"
+                        >
+                            © {{ currentYear }} HémiCycle. Projet non officiel.
+                        </p>
+                        <a
+                            href="https://www.buymeacoffee.com/dowedev"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            class="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-amber-700 to-orange-800 hover:from-amber-800 hover:to-orange-900 text-white font-medium rounded-lg transition-all duration-200 shadow-md hover:shadow-lg transform hover:scale-105"
+                        >
+                            <Coffee class="h-4 w-4" />
+                            <span class="text-sm">Buy Me A Coffee</span>
+                        </a>
+                    </div>
                     <div class="flex items-center gap-4">
                         <a
-                            href="mailto:contact@example.com"
+                            href="mailto:contact@dowedev.fr"
                             class="text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
                             title="Contact"
                         >
                             <Mail class="h-5 w-5" />
                         </a>
                         <a
-                            href="https://github.com"
+                            href="https://github.com/0xDewey/hemicycle"
                             target="_blank"
                             rel="noopener noreferrer"
                             class="text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"

@@ -21,10 +21,8 @@ Route::get('/', function () {
         ->get(['id', 'libelle_abrege', 'libelle', 'couleur_associee']);
 
     return Inertia::render('Welcome', [
-        'canLogin' => Route::has('login'),
-        'canRegister' => Route::has('register'),
-        'laravelVersion' => Application::VERSION,
-        'phpVersion' => PHP_VERSION,
+        'canLogin' => Route::has('login') && false,
+        'canRegister' => Route::has('register') && false,
         'deputiesCount' => \App\Models\Deputy::count(),
         'votesCount' => \App\Models\Vote::count(),
         'politicalGroupsCount' => \App\Models\PoliticalGroup::count(),
@@ -65,6 +63,21 @@ Route::prefix('deputies/{deputy}')->name('deputies.')->group(function () {
     Route::get('/votes', [DeputyVoteController::class, 'show'])->name('votes.show');
     Route::get('/votes/api', [DeputyVoteController::class, 'api'])->name('votes.api');
 });
+
+// Routes pour les pages légales
+Route::get('/privacy-policy', function () {
+    $policy = file_get_contents(resource_path('markdown/policy.md'));
+    return Inertia::render('PrivacyPolicy', [
+        'policy' => \Illuminate\Support\Str::markdown($policy),
+    ]);
+})->name('privacy-policy');
+
+Route::get('/terms-of-service', function () {
+    $terms = file_get_contents(resource_path('markdown/terms.md'));
+    return Inertia::render('TermsOfService', [
+        'terms' => \Illuminate\Support\Str::markdown($terms),
+    ]);
+})->name('terms-of-service');
 
 Route::middleware([
     'auth:sanctum',

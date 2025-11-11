@@ -1,0 +1,118 @@
+/* Personnalisation Tarteaucitron pour HémiCycle */
+
+/* Adapter les couleurs au thème du site - Mode clair avec fond gris */
+#tarteaucitronRoot #tarteaucitronAlertBig {
+    background: rgba(249, 250, 251, 0.98) !important;
+    border: 1px solid #d1d5db !important;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1) !important;
+}
+
+#tarteaucitronRoot .tarteaucitronTitle,
+#tarteaucitronRoot .tarteaucitronH1 {
+    color: #1f2937 !important;
+}
+
+#tarteaucitronRoot #tarteaucitronDisclaimerAlert {
+    color: #4b5563 !important;
+}
+
+/* Mode sombre */
+@media (prefers-color-scheme: dark) {
+    #tarteaucitronRoot #tarteaucitronAlertBig {
+        background: rgba(31, 41, 55, 0.98) !important;
+        border: 1px solid #4b5563 !important;
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3) !important;
+    }
+
+    #tarteaucitronRoot .tarteaucitronTitle,
+    #tarteaucitronRoot .tarteaucitronH1 {
+        color: #f9fafb !important;
+    }
+
+    #tarteaucitronRoot #tarteaucitronDisclaimerAlert {
+        color: #d1d5db !important;
+    }
+
+    #tarteaucitronRoot #tarteaucitronServices .tarteaucitronLine {
+        background: rgba(55, 65, 81, 0.5) !important;
+    }
+
+    #tarteaucitronRoot .tarteaucitronName {
+        color: #f3f4f6 !important;
+    }
+}
+
+/* Boutons personnalisés - Style moderne */
+#tarteaucitronRoot .tarteaucitronAllow {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
+    border: none !important;
+    color: white !important;
+    font-weight: 500 !important;
+    padding: 10px 20px !important;
+    border-radius: 6px !important;
+    transition: all 0.2s ease !important;
+    box-shadow: 0 2px 4px rgba(16, 185, 129, 0.2) !important;
+}
+
+#tarteaucitronRoot .tarteaucitronAllow:hover {
+    background: linear-gradient(135deg, #059669 0%, #047857 100%) !important;
+    transform: translateY(-1px) !important;
+    box-shadow: 0 4px 8px rgba(16, 185, 129, 0.3) !important;
+}
+
+#tarteaucitronRoot .tarteaucitronDeny {
+    background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%) !important;
+    border: none !important;
+    color: white !important;
+    font-weight: 500 !important;
+    padding: 10px 20px !important;
+    border-radius: 6px !important;
+    transition: all 0.2s ease !important;
+    box-shadow: 0 2px 4px rgba(107, 114, 128, 0.2) !important;
+}
+
+#tarteaucitronRoot .tarteaucitronDeny:hover {
+    background: linear-gradient(135deg, #4b5563 0%, #374151 100%) !important;
+    transform: translateY(-1px) !important;
+    box-shadow: 0 4px 8px rgba(107, 114, 128, 0.3) !important;
+}
+
+/* Bouton personnaliser */
+#tarteaucitronRoot .tarteaucitronPersonalize {
+    background: transparent !important;
+    border: 1px solid #d1d5db !important;
+    color: #4b5563 !important;
+    font-weight: 500 !important;
+    padding: 10px 20px !important;
+    border-radius: 6px !important;
+    transition: all 0.2s ease !important;
+}
+
+#tarteaucitronRoot .tarteaucitronPersonalize:hover {
+    background: #f3f4f6 !important;
+    border-color: #9ca3af !important;
+}
+
+/* Icône flottante */
+#tarteaucitronRoot #tarteaucitronIcon {
+    bottom: 10px !important;
+    right: 10px !important;
+    background: rgba(249, 250, 251, 0.95) !important;
+    border: 1px solid #d1d5db !important;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1) !important;
+}
+
+@media (prefers-color-scheme: dark) {
+    #tarteaucitronRoot #tarteaucitronIcon {
+        background: rgba(31, 41, 55, 0.95) !important;
+        border: 1px solid #4b5563 !important;
+    }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    #tarteaucitronRoot #tarteaucitronAlertBig {
+        width: 100% !important;
+        margin: 0 !important;
+    }
+}
