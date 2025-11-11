@@ -1,5 +1,6 @@
 <script setup>
 import { Head, Link } from "@inertiajs/vue3";
+import { computed } from "vue";
 import PublicLayout from "@/Layouts/PublicLayout.vue";
 import Card from "@/Components/ui/Card.vue";
 import CardHeader from "@/Components/ui/CardHeader.vue";
@@ -27,17 +28,19 @@ const props = defineProps({
     },
 });
 
-const totalVotes =
-    props.stats.pour +
-    props.stats.contre +
-    props.stats.abstention +
-    props.stats.non_votant;
+const totalVotes = computed(
+    () =>
+        props.stats.pour +
+        props.stats.contre +
+        props.stats.abstention +
+        props.stats.non_votant
+);
 
 const getPourcentage = (count) => {
-    console.log("Total Votes:", totalVotes);
+    console.log("Total Votes:", totalVotes.value);
     console.log("Count:", count);
-    if (totalVotes === 0) return 0;
-    return ((count / totalVotes) * 100).toFixed(1);
+    if (totalVotes.value === 0) return 0;
+    return ((count / totalVotes.value) * 100).toFixed(1);
 };
 </script>
 
