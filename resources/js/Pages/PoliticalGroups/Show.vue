@@ -37,8 +37,6 @@ const totalVotes = computed(
 );
 
 const getPourcentage = (count) => {
-    console.log("Total Votes:", totalVotes.value);
-    console.log("Count:", count);
     if (totalVotes.value === 0) return 0;
     return ((count / totalVotes.value) * 100).toFixed(1);
 };

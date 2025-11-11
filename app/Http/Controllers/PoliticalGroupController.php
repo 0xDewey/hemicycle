@@ -44,10 +44,10 @@ class PoliticalGroupController extends Controller
             ->get()
             ->pluck('count', 'position');
 
-        $stats['pour'] = $votesByPosition['pour'] ?? 0;
-        $stats['contre'] = $votesByPosition['contre'] ?? 0;
-        $stats['abstention'] = $votesByPosition['abstention'] ?? 0;
-        $stats['non_votant'] = $votesByPosition['non_votant'] ?? 0;
+        $stats['pour'] = (int) $votesByPosition['pour'] ?? 0;
+        $stats['contre'] = (int) $votesByPosition['contre'] ?? 0;
+        $stats['abstention'] = (int) $votesByPosition['abstention'] ?? 0;
+        $stats['non_votant'] = (int) $votesByPosition['non_votant'] ?? 0;
 
         return Inertia::render('PoliticalGroups/Show', [
             'party' => $politicalGroup,
@@ -94,11 +94,11 @@ class PoliticalGroupController extends Controller
                 ->pluck('count', 'position');
 
             $vote->party_votes = [
-                'pour' => $partyVotes['pour'] ?? 0,
-                'contre' => $partyVotes['contre'] ?? 0,
-                'abstention' => $partyVotes['abstention'] ?? 0,
-                'non_votant' => $partyVotes['non_votant'] ?? 0,
-                'total' => $politicalGroup->deputies->count(),
+                'pour' => (int) $partyVotes['pour'] ?? 0,
+                'contre' => (int) $partyVotes['contre'] ?? 0,
+                'abstention' => (int) $partyVotes['abstention'] ?? 0,
+                'non_votant' => (int) $partyVotes['non_votant'] ?? 0,
+                'total' => (int) $politicalGroup->deputies->count(),
             ];
 
             return $vote;
