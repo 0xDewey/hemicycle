@@ -46,7 +46,7 @@ const getPourcentage = (count) => {
     <PublicLayout :title="party.nom">
         <Head :title="party.nom" />
 
-        <div class="container mx-auto px-4 max-w-7xl">
+        <div class="container mx-auto px-4 max-w-7xl py-12">
             <!-- Back Button -->
             <Link
                 href="/parties"
