@@ -8,7 +8,14 @@ import CardTitle from "@/Components/ui/CardTitle.vue";
 import CardContent from "@/Components/ui/CardContent.vue";
 import Button from "@/Components/ui/Button.vue";
 import Badge from "@/Components/ui/Badge.vue";
-import { Search, Filter, ChevronRight, ArrowLeft, Vote } from "lucide-vue-next";
+import {
+    Search,
+    Filter,
+    ChevronRight,
+    ChevronLeft,
+    ArrowLeft,
+    Vote,
+} from "lucide-vue-next";
 
 const props = defineProps({
     votes: {
@@ -284,7 +291,7 @@ const getResultatBadge = (resultat) => {
                     :is="link.url ? Link : 'span'"
                     :href="link.url"
                     :class="[
-                        'px-3 py-2 rounded text-sm',
+                        'px-3 py-2 rounded text-sm flex items-center gap-1',
                         link.active
                             ? 'bg-primary text-primary-foreground'
                             : link.url
@@ -292,7 +299,15 @@ const getResultatBadge = (resultat) => {
                             : 'opacity-50 cursor-not-allowed',
                     ]"
                 >
-                    <span v-html="link.label" />
+                    <ChevronLeft v-if="index === 0" class="h-4 w-4" />
+                    <span
+                        v-if="index !== 0 && index !== votes.links.length - 1"
+                        v-html="link.label"
+                    />
+                    <ChevronRight
+                        v-if="index === votes.links.length - 1"
+                        class="h-4 w-4"
+                    />
                 </component>
             </div>
         </div>

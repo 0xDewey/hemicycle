@@ -6,7 +6,7 @@ import CardHeader from "@/Components/ui/CardHeader.vue";
 import CardTitle from "@/Components/ui/CardTitle.vue";
 import CardContent from "@/Components/ui/CardContent.vue";
 import DailyParticipationChart from "./Partials/DailyParticipationChart.vue";
-import { ArrowLeft, Users } from "lucide-vue-next";
+import { ArrowLeft, Users, ChevronLeft, ChevronRight } from "lucide-vue-next";
 
 const props = defineProps({
     deputy: {
@@ -281,7 +281,7 @@ const formatDate = (date) => {
                     <!-- Pagination -->
                     <div
                         v-if="votes.links.length > 3"
-                        class="flex justify-center gap-2 mt-6"
+                        class="flex flex-wrap justify-center gap-2 mt-6"
                     >
                         <component
                             v-for="(link, index) in votes.links"
@@ -289,7 +289,7 @@ const formatDate = (date) => {
                             :is="link.url ? Link : 'span'"
                             :href="link.url"
                             :class="[
-                                'px-3 py-2 rounded text-sm',
+                                'px-3 py-2 rounded text-sm flex items-center gap-1',
                                 link.active
                                     ? 'bg-primary text-primary-foreground'
                                     : link.url
@@ -297,7 +297,18 @@ const formatDate = (date) => {
                                     : 'opacity-50 cursor-not-allowed',
                             ]"
                         >
-                            <span v-html="link.label" />
+                            <ChevronLeft v-if="index === 0" class="h-4 w-4" />
+                            <span
+                                v-if="
+                                    index !== 0 &&
+                                    index !== votes.links.length - 1
+                                "
+                                v-html="link.label"
+                            />
+                            <ChevronRight
+                                v-if="index === votes.links.length - 1"
+                                class="h-4 w-4"
+                            />
                         </component>
                     </div>
                 </CardContent>
