@@ -297,7 +297,7 @@ const barChartOptions = {
     <div
         class="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-gray-900 dark:to-gray-800 py-12"
     >
-        <div class="container mx-auto px-4 max-w-7xl py-12">
+        <div class="container mx-auto px-4 max-w-7xl">
             <!-- Back Button -->
             <Link
                 href="/votes"
