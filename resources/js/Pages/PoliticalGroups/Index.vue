@@ -19,7 +19,7 @@ const props = defineProps({
     <PublicLayout title="Partis Politiques">
         <Head title="Partis Politiques" />
 
-        <div class="container mx-auto px-4 max-w-7xl">
+        <div class="container mx-auto px-4 max-w-7xl py-12">
             <!-- Header -->
             <div class="mb-8">
                 <h1

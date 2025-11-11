@@ -1,6 +1,6 @@
 <script setup>
-import { ref, computed, watch } from "vue";
-import { Link } from "@inertiajs/vue3";
+import { ref, computed, watch, onMounted } from "vue";
+import { Link, router } from "@inertiajs/vue3";
 import axios from "axios";
 import PublicLayout from "@/Layouts/PublicLayout.vue";
 import Card from "@/Components/ui/Card.vue";
@@ -32,6 +32,21 @@ const selectedDepartment = ref("");
 const deputySearch = ref("");
 const departmentStats = ref(null);
 const loading = ref(false);
+
+// Restaurer les valeurs depuis l'URL au montage
+onMounted(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const dept = urlParams.get("department");
+    const search = urlParams.get("search");
+
+    if (search) {
+        deputySearch.value = search;
+    }
+
+    if (dept) {
+        selectedDepartment.value = dept;
+    }
+});
 
 // Fonction pour normaliser le texte (sans accents ni majuscules)
 const normalizeText = (text) => {
@@ -98,6 +113,9 @@ const fetchDepartmentStats = async (code) => {
 
 // Auto-sélection du département si la recherche correspond exactement
 watch(deputySearch, (newValue) => {
+    // Mettre à jour l'URL avec les paramètres de recherche
+    updateURL();
+
     if (!newValue) return;
 
     const search = normalizeText(newValue);
@@ -129,10 +147,32 @@ watch(deputySearch, (newValue) => {
 });
 
 watch(selectedDepartment, (newValue) => {
+    // Mettre à jour l'URL avec les paramètres de recherche
+    updateURL();
+
     if (newValue) {
         fetchDepartmentStats(newValue);
     }
 });
+
+// Fonction pour mettre à jour l'URL sans recharger la page
+const updateURL = () => {
+    const params = new URLSearchParams();
+
+    if (deputySearch.value) {
+        params.set("search", deputySearch.value);
+    }
+
+    if (selectedDepartment.value) {
+        params.set("department", selectedDepartment.value);
+    }
+
+    const newURL = params.toString()
+        ? `${window.location.pathname}?${params.toString()}`
+        : window.location.pathname;
+
+    window.history.replaceState({}, "", newURL);
+};
 </script>
 
 <template>

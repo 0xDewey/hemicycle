@@ -1,5 +1,5 @@
 <script setup>
-import { ref } from "vue";
+import { ref, computed } from "vue";
 import { Head, Link } from "@inertiajs/vue3";
 import Card from "@/Components/ui/Card.vue";
 import CardHeader from "@/Components/ui/CardHeader.vue";
@@ -21,6 +21,22 @@ const props = defineProps({
         type: Object,
         required: true,
     },
+});
+
+// Récupérer les paramètres de retour depuis l'URL
+const backUrl = computed(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const params = new URLSearchParams();
+
+    if (urlParams.get("search")) {
+        params.set("search", urlParams.get("search"));
+    }
+
+    if (urlParams.get("department")) {
+        params.set("department", urlParams.get("department"));
+    }
+
+    return params.toString() ? `/deputies?${params.toString()}` : "/deputies";
 });
 
 const getPositionBadge = (position) => {
@@ -68,7 +84,7 @@ const formatDate = (date) => {
             <!-- Header -->
             <div class="mb-8">
                 <Link
-                    href="/deputies"
+                    :href="backUrl"
                     class="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-4 transition-colors"
                 >
                     <ArrowLeft class="h-4 w-4" />

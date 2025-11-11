@@ -251,24 +251,50 @@ class SyncDeputiesCommand extends Command
      */
     private function getPartyColor($sigle)
     {
-        // Couleurs approximatives des principaux partis français
+        // Couleurs officielles des groupes parlementaires de la XVIIe législature (2024-2029)
         $colors = [
-            'RN' => '#0d378a', // Rassemblement National - Bleu foncé
-            'LR' => '#0066cc', // Les Républicains - Bleu
-            'UDI' => '#00a8ff', // UDI - Bleu clair
-            'LIOT' => '#ffa500', // LIOT - Orange
-            'RE' => '#ffeb00', // Renaissance - Jaune
-            'DEM' => '#ff9900', // Démocrate - Orange clair
-            'HOR' => '#ffd700', // Horizons - Or
-            'ECO' => '#00c000', // Écologiste - Vert
-            'SOC' => '#ff1493', // Socialistes - Rose
-            'LFI' => '#c9462c', // La France Insoumise - Rouge
-            'FI' => '#c9462c', // France Insoumise - Rouge
-            'GDR' => '#dd0000', // Gauche démocrate et républicaine - Rouge foncé
-            'PCF' => '#dd0000', // Parti communiste français - Rouge
-            'PS' => '#ff1493', // Parti socialiste - Rose
-            'UMP' => '#0066cc', // Union pour un Mouvement Populaire - Bleu
-            'MODEM' => '#ff9900', // MoDem - Orange
+            // Extrême droite
+            'RN' => '#0d378a', // Rassemblement National - Bleu marine
+            
+            // Droite
+            'LR' => '#0066CC', // Les Républicains - Bleu
+            'DR' => '#0066CC', // Droite Républicaine - Bleu
+            'UDR' => '#0066CC', // Union des Démocrates et Républicains - Bleu
+            
+            // Centre droit
+            'UDI' => '#00ADEE', // UDI - Bleu clair
+            'LIOT' => '#ee7f01', // Libertés, Indépendants, Outre-mer et Territoires - Orange
+            
+            // Centre
+            'EPR' => '#FFEB00', // Ensemble pour la République - Jaune
+            'RE' => '#FFEB00', // Renaissance (ex-LREM) - Jaune
+            'ENS' => '#FFEB00', // Ensemble - Jaune
+            'MODEM' => '#FF9900', // MoDem - Orange
+            'DEM' => '#FF9900', // Démocrate - Orange
+            'HOR' => '#F07C13', // Horizons - Orange foncé
+            'ACT' => '#FFEB00', // Agir ensemble - Jaune
+            
+            // Gauche écologiste
+            'ECO' => '#00C000', // Écologiste - NUPES - Vert
+            'ECOLO' => '#00C000', // Écologiste - Vert
+            'EELV' => '#00C000', // Europe Écologie Les Verts - Vert
+            
+            // Gauche socialiste
+            'SOC' => '#FF8080', // Socialistes et apparentés - Rose
+            'PS' => '#FF8080', // Parti socialiste - Rose
+            'GDR' => '#DD0000', // Gauche démocrate et républicaine - NUPES - Rouge
+            
+            // Gauche radicale
+            'LFI' => '#CC2443', // La France Insoumise - NUPES - Rouge carmin
+            'FI' => '#CC2443', // France Insoumise - Rouge carmin
+            'NUPES' => '#CC2443', // NUPES - Rouge carmin
+            'GDR-NUPES' => '#DD0000', // Gauche démocrate et républicaine - NUPES - Rouge
+            
+            // Autres
+            'NI' => '#CCCCCC', // Non-inscrits - Gris
+            'PCF' => '#DD0000', // Parti communiste français - Rouge
+            'PRG' => '#FF8080', // Parti radical de gauche - Rose
+            'UMP' => '#0066CC', // Union pour un Mouvement Populaire (historique) - Bleu
         ];
 
         return $colors[strtoupper($sigle)] ?? '#808080'; // Gris par défaut

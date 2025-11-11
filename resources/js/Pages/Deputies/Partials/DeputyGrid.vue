@@ -1,4 +1,5 @@
 <script setup>
+import { computed } from "vue";
 import { Link } from "@inertiajs/vue3";
 import Card from "@/Components/ui/Card.vue";
 import CardHeader from "@/Components/ui/CardHeader.vue";
@@ -12,6 +13,12 @@ defineProps({
         type: Array,
         required: true,
     },
+});
+
+// Récupérer les paramètres de l'URL pour les passer aux liens
+const getBackUrl = computed(() => {
+    const params = new URLSearchParams(window.location.search);
+    return params.toString() ? `?${params.toString()}` : "";
 });
 </script>
 
@@ -70,7 +77,7 @@ defineProps({
                 </CardContent>
                 <CardFooter>
                     <Link
-                        :href="`/deputies/${deputy.id}/votes`"
+                        :href="`/deputies/${deputy.id}/votes${getBackUrl}`"
                         class="inline-flex items-center gap-2 text-sm text-primary hover:underline"
                     >
                         <Eye class="h-4 w-4" />
