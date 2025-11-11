@@ -30,7 +30,6 @@ class SyncDeputiesCommand extends Command
     public function handle()
     {
         // URL par défaut ou URL personnalisée
-        Deputy::truncate();
         $defaultUrl = 'https://data.assemblee-nationale.fr/static/openData/repository/17/amo/deputes_actifs_mandats_actifs_organes_divises/AMO40_deputes_actifs_mandats_actifs_organes_divises.json.zip';
         $url = $this->option('url') ?: $defaultUrl;
 
