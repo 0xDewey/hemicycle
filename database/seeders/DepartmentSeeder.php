@@ -1,0 +1,142 @@
+<?php
+
+namespace Database\Seeders;
+
+use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\DB;
+
+class DepartmentSeeder extends Seeder
+{
+    /**
+     * Run the database seeds.
+     */
+    public function run(): void
+    {
+        $departments = [
+            ['code' => '01', 'name' => 'Ain', 'order' => 1],
+            ['code' => '02', 'name' => 'Aisne', 'order' => 2],
+            ['code' => '03', 'name' => 'Allier', 'order' => 3],
+            ['code' => '04', 'name' => 'Alpes-de-Haute-Provence', 'order' => 4],
+            ['code' => '05', 'name' => 'Hautes-Alpes', 'order' => 5],
+            ['code' => '06', 'name' => 'Alpes-Maritimes', 'order' => 6],
+            ['code' => '07', 'name' => 'Ardèche', 'order' => 7],
+            ['code' => '08', 'name' => 'Ardennes', 'order' => 8],
+            ['code' => '09', 'name' => 'Ariège', 'order' => 9],
+            ['code' => '10', 'name' => 'Aube', 'order' => 10],
+            ['code' => '11', 'name' => 'Aude', 'order' => 11],
+            ['code' => '12', 'name' => 'Aveyron', 'order' => 12],
+            ['code' => '13', 'name' => 'Bouches-du-Rhône', 'order' => 13],
+            ['code' => '14', 'name' => 'Calvados', 'order' => 14],
+            ['code' => '15', 'name' => 'Cantal', 'order' => 15],
+            ['code' => '16', 'name' => 'Charente', 'order' => 16],
+            ['code' => '17', 'name' => 'Charente-Maritime', 'order' => 17],
+            ['code' => '18', 'name' => 'Cher', 'order' => 18],
+            ['code' => '19', 'name' => 'Corrèze', 'order' => 19],
+            ['code' => '21', 'name' => 'Côte-d\'Or', 'order' => 21],
+            ['code' => '22', 'name' => 'Côtes-d\'Armor', 'order' => 22],
+            ['code' => '23', 'name' => 'Creuse', 'order' => 23],
+            ['code' => '24', 'name' => 'Dordogne', 'order' => 24],
+            ['code' => '25', 'name' => 'Doubs', 'order' => 25],
+            ['code' => '26', 'name' => 'Drôme', 'order' => 26],
+            ['code' => '27', 'name' => 'Eure', 'order' => 27],
+            ['code' => '28', 'name' => 'Eure-et-Loir', 'order' => 28],
+            ['code' => '29', 'name' => 'Finistère', 'order' => 29],
+            ['code' => '2A', 'name' => 'Corse-du-Sud', 'order' => 201],
+            ['code' => '2B', 'name' => 'Haute-Corse', 'order' => 202],
+            ['code' => '30', 'name' => 'Gard', 'order' => 30],
+            ['code' => '31', 'name' => 'Haute-Garonne', 'order' => 31],
+            ['code' => '32', 'name' => 'Gers', 'order' => 32],
+            ['code' => '33', 'name' => 'Gironde', 'order' => 33],
+            ['code' => '34', 'name' => 'Hérault', 'order' => 34],
+            ['code' => '35', 'name' => 'Ille-et-Vilaine', 'order' => 35],
+            ['code' => '36', 'name' => 'Indre', 'order' => 36],
+            ['code' => '37', 'name' => 'Indre-et-Loire', 'order' => 37],
+            ['code' => '38', 'name' => 'Isère', 'order' => 38],
+            ['code' => '39', 'name' => 'Jura', 'order' => 39],
+            ['code' => '40', 'name' => 'Landes', 'order' => 40],
+            ['code' => '41', 'name' => 'Loir-et-Cher', 'order' => 41],
+            ['code' => '42', 'name' => 'Loire', 'order' => 42],
+            ['code' => '43', 'name' => 'Haute-Loire', 'order' => 43],
+            ['code' => '44', 'name' => 'Loire-Atlantique', 'order' => 44],
+            ['code' => '45', 'name' => 'Loiret', 'order' => 45],
+            ['code' => '46', 'name' => 'Lot', 'order' => 46],
+            ['code' => '47', 'name' => 'Lot-et-Garonne', 'order' => 47],
+            ['code' => '48', 'name' => 'Lozère', 'order' => 48],
+            ['code' => '49', 'name' => 'Maine-et-Loire', 'order' => 49],
+            ['code' => '50', 'name' => 'Manche', 'order' => 50],
+            ['code' => '51', 'name' => 'Marne', 'order' => 51],
+            ['code' => '52', 'name' => 'Haute-Marne', 'order' => 52],
+            ['code' => '53', 'name' => 'Mayenne', 'order' => 53],
+            ['code' => '54', 'name' => 'Meurthe-et-Moselle', 'order' => 54],
+            ['code' => '55', 'name' => 'Meuse', 'order' => 55],
+            ['code' => '56', 'name' => 'Morbihan', 'order' => 56],
+            ['code' => '57', 'name' => 'Moselle', 'order' => 57],
+            ['code' => '58', 'name' => 'Nièvre', 'order' => 58],
+            ['code' => '59', 'name' => 'Nord', 'order' => 59],
+            ['code' => '60', 'name' => 'Oise', 'order' => 60],
+            ['code' => '61', 'name' => 'Orne', 'order' => 61],
+            ['code' => '62', 'name' => 'Pas-de-Calais', 'order' => 62],
+            ['code' => '63', 'name' => 'Puy-de-Dôme', 'order' => 63],
+            ['code' => '64', 'name' => 'Pyrénées-Atlantiques', 'order' => 64],
+            ['code' => '65', 'name' => 'Hautes-Pyrénées', 'order' => 65],
+            ['code' => '66', 'name' => 'Pyrénées-Orientales', 'order' => 66],
+            ['code' => '67', 'name' => 'Bas-Rhin', 'order' => 67],
+            ['code' => '68', 'name' => 'Haut-Rhin', 'order' => 68],
+            ['code' => '69', 'name' => 'Rhône', 'order' => 69],
+            ['code' => '70', 'name' => 'Haute-Saône', 'order' => 70],
+            ['code' => '71', 'name' => 'Saône-et-Loire', 'order' => 71],
+            ['code' => '72', 'name' => 'Sarthe', 'order' => 72],
+            ['code' => '73', 'name' => 'Savoie', 'order' => 73],
+            ['code' => '74', 'name' => 'Haute-Savoie', 'order' => 74],
+            ['code' => '75', 'name' => 'Paris', 'order' => 75],
+            ['code' => '76', 'name' => 'Seine-Maritime', 'order' => 76],
+            ['code' => '77', 'name' => 'Seine-et-Marne', 'order' => 77],
+            ['code' => '78', 'name' => 'Yvelines', 'order' => 78],
+            ['code' => '79', 'name' => 'Deux-Sèvres', 'order' => 79],
+            ['code' => '80', 'name' => 'Somme', 'order' => 80],
+            ['code' => '81', 'name' => 'Tarn', 'order' => 81],
+            ['code' => '82', 'name' => 'Tarn-et-Garonne', 'order' => 82],
+            ['code' => '83', 'name' => 'Var', 'order' => 83],
+            ['code' => '84', 'name' => 'Vaucluse', 'order' => 84],
+            ['code' => '85', 'name' => 'Vendée', 'order' => 85],
+            ['code' => '86', 'name' => 'Vienne', 'order' => 86],
+            ['code' => '87', 'name' => 'Haute-Vienne', 'order' => 87],
+            ['code' => '88', 'name' => 'Vosges', 'order' => 88],
+            ['code' => '89', 'name' => 'Yonne', 'order' => 89],
+            ['code' => '90', 'name' => 'Territoire de Belfort', 'order' => 90],
+            ['code' => '91', 'name' => 'Essonne', 'order' => 91],
+            ['code' => '92', 'name' => 'Hauts-de-Seine', 'order' => 92],
+            ['code' => '93', 'name' => 'Seine-Saint-Denis', 'order' => 93],
+            ['code' => '94', 'name' => 'Val-de-Marne', 'order' => 94],
+            ['code' => '95', 'name' => 'Val-d\'Oise', 'order' => 95],
+            ['code' => '971', 'name' => 'Guadeloupe', 'order' => 971],
+            ['code' => '972', 'name' => 'Martinique', 'order' => 972],
+            ['code' => '973', 'name' => 'Guyane', 'order' => 973],
+            ['code' => '974', 'name' => 'La Réunion', 'order' => 974],
+            ['code' => '975', 'name' => 'Saint-Pierre-et-Miquelon', 'order' => 975],
+            ['code' => '976', 'name' => 'Mayotte', 'order' => 976],
+            ['code' => '977', 'name' => 'Saint-Barthélemy', 'order' => 977],
+            ['code' => '978', 'name' => 'Saint-Martin', 'order' => 978],
+            ['code' => '984', 'name' => 'Terres australes et antarctiques françaises', 'order' => 984],
+            ['code' => '986', 'name' => 'Wallis-et-Futuna', 'order' => 986],
+            ['code' => '987', 'name' => 'Polynésie française', 'order' => 987],
+            ['code' => '988', 'name' => 'Nouvelle-Calédonie', 'order' => 988],
+            ['code' => '989', 'name' => 'Île de Clipperton', 'order' => 989],
+            ['code' => '099', 'name' => 'Français établis hors de France', 'order' => 999],
+        ];
+
+        foreach ($departments as $dept) {
+            DB::table('departments')->updateOrInsert(
+                ['code' => $dept['code']],
+                [
+                    'name' => $dept['name'],
+                    'order' => $dept['order'],
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]
+            );
+        }
+
+        $this->command->info('Departments seeded successfully!');
+    }
+}

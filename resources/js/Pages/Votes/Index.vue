@@ -231,7 +231,7 @@ const getResultatBadge = (resultat) => {
                                 </span>
                                 <span
                                     v-if="vote.type"
-                                    class="text-xs text-muted-foreground"
+                                    class="px-3 py-1 rounded-full text-xs font-medium bg-indigo-100 dark:bg-indigo-900/30 text-indigo-800 dark:text-indigo-300"
                                 >
                                     {{ vote.type }}
                                 </span>

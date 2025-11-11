@@ -288,14 +288,22 @@ const formatDate = (date) => {
                                     >
                                         {{ deputyVote.vote.description }}
                                     </p>
-                                    <div class="text-xs text-muted-foreground">
-                                        {{
-                                            formatDate(
-                                                deputyVote.vote.date_scrutin
-                                            )
-                                        }}
-                                        •
-                                        {{ deputyVote.vote.type || "Scrutin" }}
+                                    <div
+                                        class="flex items-center gap-2 text-xs"
+                                    >
+                                        <span class="text-muted-foreground">
+                                            {{
+                                                formatDate(
+                                                    deputyVote.vote.date_scrutin
+                                                )
+                                            }}
+                                        </span>
+                                        <span
+                                            v-if="deputyVote.vote.type"
+                                            class="px-2 py-1 rounded-full text-xs font-medium bg-indigo-100 dark:bg-indigo-900/30 text-indigo-800 dark:text-indigo-300"
+                                        >
+                                            {{ deputyVote.vote.type }}
+                                        </span>
                                     </div>
                                 </div>
                                 <div class="text-right text-sm">

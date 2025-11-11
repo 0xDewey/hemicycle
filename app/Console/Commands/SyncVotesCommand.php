@@ -125,13 +125,13 @@ class SyncVotesCommand extends Command
 
                     // Extraire les informations du scrutin
                     $numero = $scrutin['numero'] ?? null;
-                    $titre = $scrutin['titre'] ?? 'Scrutin sans titre';
+                    $titre = ucfirst($scrutin['titre']) ?? 'Scrutin sans titre';
                     // Tronquer le titre à 250 caractères pour éviter les erreurs de base de données
                     $titre = mb_substr($titre, 0, 250);
                     $dateScrutin = $scrutin['dateScrutin'] ?? null;
 
                     // Extraire le type de vote
-                    $typeVote = $scrutin['typeVote']['libelleTypeVote'] ?? null;
+                    $typeVote = ucfirst($scrutin['typeVote']['libelleTypeVote']) ?? null;
 
                     // Extraire les résultats
                     $syntheseVote = $scrutin['syntheseVote'] ?? [];

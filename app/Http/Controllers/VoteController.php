@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Department;
 use App\Models\PoliticalGroup;
 use App\Models\Vote;
 use Illuminate\Http\Request;
@@ -164,6 +165,64 @@ class VoteController extends Controller
             ->sortByDesc('count')
             ->values();
 
+        // Calculer les statistiques par département - structure différente
+        $allDepartments = \App\Models\Deputy::select('departement')
+            ->groupBy('departement')
+            ->get()
+            ->pluck('departement');
+
+        $departmentStats = $allDepartments->map(function ($department) use ($vote, $deputyVotes) {
+            // Compter les votes par position pour ce département
+            $deptVotes = [
+                'department' => $department,
+                'pour' => 0,
+                'contre' => 0,
+                'abstention' => 0,
+                'non_votant' => 0,
+                'non_votant_pan' => 0,
+                'non_votant_gov' => 0,
+                'non_votant_autres' => 0,
+                'absents' => 0,
+                'total_deputies' => 0,
+            ];
+
+            // Total des députés du département
+            $totalInDept = \App\Models\Deputy::where('departement', $department)->count();
+            $deptVotes['total_deputies'] = $totalInDept;
+
+            // Compter les votes pour chaque position
+            foreach (['pour', 'contre', 'abstention', 'non_votant'] as $position) {
+                $votesInPosition = $deputyVotes->get($position, collect());
+                $count = $votesInPosition->filter(function ($v) use ($department) {
+                    return $v->deputy->departement === $department;
+                })->count();
+                
+                $deptVotes[$position] = $count;
+
+                // Détails pour non-votants
+                if ($position === 'non_votant') {
+                    $nonVotantsInDept = $votesInPosition->filter(function ($v) use ($department) {
+                        return $v->deputy->departement === $department;
+                    });
+                    
+                    $deptVotes['non_votant_pan'] = $nonVotantsInDept->where('cause_position', 'PAN')->count();
+                    $deptVotes['non_votant_gov'] = $nonVotantsInDept->where('cause_position', 'GOV')->count();
+                    $deptVotes['non_votant_autres'] = $nonVotantsInDept->whereNotIn('cause_position', ['PAN', 'GOV'])->count();
+                }
+            }
+
+            // Calculer les absents
+            $votedInDept = $deptVotes['pour'] + $deptVotes['contre'] + $deptVotes['abstention'] + $deptVotes['non_votant'];
+            $deptVotes['absents'] = $totalInDept - $votedInDept;
+
+            return $deptVotes;
+        })
+            ->filter(function ($stat) {
+                return $stat['total_deputies'] > 0;
+            })
+            ->sortBy('department')
+            ->values();
+
         // Transformer deputyVotes pour ne garder que les données essentielles
         $deputyVotesFormatted = $deputyVotes->map(function ($votes, $position) {
             return $votes->map(function ($deputyVote) {
@@ -193,6 +252,11 @@ class VoteController extends Controller
             'deputyVotes' => $deputyVotesFormatted,
             'stats' => $stats,
             'partyStats' => $partyStats,
+            'departmentStats' => $departmentStats,
+            'departments' => Department::getAllSorted()->map(fn($d) => [
+                'code' => $d->code,
+                'name' => $d->name,
+            ]),
         ]);
     }
 }
