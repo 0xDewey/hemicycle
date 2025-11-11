@@ -174,11 +174,22 @@ const getPartyChartData = (partyStats) => {
 
     Object.keys(partyStats).forEach((position) => {
         const stats = partyStats[position];
+        // Vérifier que stats est bien un tableau
+        if (!Array.isArray(stats)) {
+            console.warn(`partyStats[${position}] is not an array:`, stats);
+            return;
+        }
+
         stats.forEach((stat) => {
+            if (!stat || !stat.party) {
+                console.warn(`Invalid stat for position ${position}:`, stat);
+                return;
+            }
+
             if (!partiesMap.has(stat.party)) {
                 partiesMap.set(stat.party, {
-                    name: stat.party_name,
-                    color: stat.party_color,
+                    name: stat.party_name || stat.party,
+                    color: stat.party_color || "#808080",
                     sigle: stat.party,
                     pour: 0,
                     contre: 0,
@@ -187,7 +198,7 @@ const getPartyChartData = (partyStats) => {
                     absents: 0,
                 });
             }
-            partiesMap.get(stat.party)[position] = stat.count;
+            partiesMap.get(stat.party)[position] = stat.count || 0;
         });
     });
 
