@@ -34,6 +34,8 @@ const totalVotes =
     props.stats.non_votant;
 
 const getPourcentage = (count) => {
+    console.log("Total Votes:", totalVotes);
+    console.log("Count:", count);
     if (totalVotes === 0) return 0;
     return ((count / totalVotes) * 100).toFixed(1);
 };
