@@ -15,6 +15,7 @@ import {
     Minus,
     XCircle,
     Vote,
+    UserX,
 } from "lucide-vue-next";
 
 const props = defineProps({
@@ -33,7 +34,8 @@ const totalVotes = computed(
         props.stats.pour +
         props.stats.contre +
         props.stats.abstention +
-        props.stats.non_votant
+        props.stats.non_votant +
+        props.stats.absents
 );
 
 const getPourcentage = (count) => {
@@ -128,7 +130,7 @@ const getPourcentage = (count) => {
                                     </div>
                                 </div>
                                 <div
-                                    class="w-full bg-gray-200 rounded-full h-2"
+                                    class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2"
                                 >
                                     <div
                                         class="bg-green-600 h-2 rounded-full"
@@ -165,7 +167,7 @@ const getPourcentage = (count) => {
                                     </div>
                                 </div>
                                 <div
-                                    class="w-full bg-gray-200 rounded-full h-2"
+                                    class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2"
                                 >
                                     <div
                                         class="bg-red-600 h-2 rounded-full"
@@ -183,14 +185,16 @@ const getPourcentage = (count) => {
                                     class="flex justify-between items-center mb-2"
                                 >
                                     <div class="flex items-center gap-2">
-                                        <Minus class="h-5 w-5 text-gray-600" />
+                                        <Minus
+                                            class="h-5 w-5 text-gray-600 dark:text-gray-400"
+                                        />
                                         <span class="font-medium"
                                             >Abstention</span
                                         >
                                     </div>
                                     <div class="text-right">
                                         <span
-                                            class="text-2xl font-bold text-gray-600"
+                                            class="text-2xl font-bold text-gray-600 dark:text-gray-400"
                                             >{{ stats.abstention }}</span
                                         >
                                         <span
@@ -204,10 +208,10 @@ const getPourcentage = (count) => {
                                     </div>
                                 </div>
                                 <div
-                                    class="w-full bg-gray-200 rounded-full h-2"
+                                    class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2"
                                 >
                                     <div
-                                        class="bg-gray-600 h-2 rounded-full"
+                                        class="bg-gray-600 dark:bg-gray-400 h-2 rounded-full"
                                         :style="{
                                             width:
                                                 getPourcentage(
@@ -246,7 +250,7 @@ const getPourcentage = (count) => {
                                     </div>
                                 </div>
                                 <div
-                                    class="w-full bg-gray-200 rounded-full h-2"
+                                    class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2"
                                 >
                                     <div
                                         class="bg-orange-600 h-2 rounded-full"
@@ -255,6 +259,43 @@ const getPourcentage = (count) => {
                                                 getPourcentage(
                                                     stats.non_votant
                                                 ) + '%',
+                                        }"
+                                    ></div>
+                                </div>
+                            </div>
+
+                            <div>
+                                <div
+                                    class="flex justify-between items-center mb-2"
+                                >
+                                    <div class="flex items-center gap-2">
+                                        <UserX
+                                            class="h-5 w-5 text-purple-600"
+                                        />
+                                        <span class="font-medium">Absents</span>
+                                    </div>
+                                    <div class="text-right">
+                                        <span
+                                            class="text-2xl font-bold text-purple-600"
+                                            >{{ stats.absents }}</span
+                                        >
+                                        <span
+                                            class="text-sm text-muted-foreground ml-2"
+                                            >({{
+                                                getPourcentage(stats.absents)
+                                            }}%)</span
+                                        >
+                                    </div>
+                                </div>
+                                <div
+                                    class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2"
+                                >
+                                    <div
+                                        class="bg-purple-600 h-2 rounded-full"
+                                        :style="{
+                                            width:
+                                                getPourcentage(stats.absents) +
+                                                '%',
                                         }"
                                     ></div>
                                 </div>

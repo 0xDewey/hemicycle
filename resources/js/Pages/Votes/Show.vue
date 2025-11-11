@@ -358,6 +358,15 @@ const barChartOptions = {
                         <p class="text-muted-foreground">{{ vote.type }}</p>
                     </div>
 
+                    <div v-if="vote.demandeur" class="mb-6">
+                        <h3 class="font-semibold mb-2">Demandé par</h3>
+                        <span
+                            class="inline-block px-3 py-1 rounded-full text-sm font-medium bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300"
+                        >
+                            {{ vote.demandeur }}
+                        </span>
+                    </div>
+
                     <!-- Vote Stats -->
                     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
                         <!-- Stats Grid -->

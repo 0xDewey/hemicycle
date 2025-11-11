@@ -23,13 +23,26 @@ class DeputyVoteController extends Controller
             ->orderByVoteDate()
             ->paginate(20);
 
+        // Nombre total de scrutins
+        $totalScrutins = Vote::count();
+        
+        // Nombre de votes du député
+        $totalVotesDeputy = DeputyVote::forDeputy($deputy->id)->count();
+        
+        // Calcul des absences
+        $absents = $totalScrutins - $totalVotesDeputy;
+        $tauxAbsenteisme = $totalScrutins > 0 ? round(($absents / $totalScrutins) * 100, 1) : 0;
+
         // Statistiques
         $stats = [
-            'total' => DeputyVote::forDeputy($deputy->id)->count(),
-            'pour' => DeputyVote::forDeputy($deputy->id)->where('position', 'pour')->count(),
-            'contre' => DeputyVote::forDeputy($deputy->id)->where('position', 'contre')->count(),
-            'abstention' => DeputyVote::forDeputy($deputy->id)->where('position', 'abstention')->count(),
-            'non_votant' => DeputyVote::forDeputy($deputy->id)->where('position', 'non_votant')->count(),
+            'total' => (int) $totalVotesDeputy,
+            'pour' => (int) DeputyVote::forDeputy($deputy->id)->where('position', 'pour')->count(),
+            'contre' => (int) DeputyVote::forDeputy($deputy->id)->where('position', 'contre')->count(),
+            'abstention' => (int) DeputyVote::forDeputy($deputy->id)->where('position', 'abstention')->count(),
+            'non_votant' => (int) DeputyVote::forDeputy($deputy->id)->where('position', 'non_votant')->count(),
+            'absents' => (int) $absents,
+            'total_scrutins' => (int) $totalScrutins,
+            'taux_absenteisme' => $tauxAbsenteisme,
         ];
 
         return Inertia::render('Deputies/Votes', [

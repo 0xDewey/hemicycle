@@ -18,6 +18,7 @@ class Vote extends Model
         'contre',
         'abstention',
         'resultat',
+        'demandeur',
         'meta',
         'last_synced_at',
     ];

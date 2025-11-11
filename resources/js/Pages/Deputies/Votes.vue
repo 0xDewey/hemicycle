@@ -137,7 +137,9 @@ const formatDate = (date) => {
             </div>
 
             <!-- Statistics Cards -->
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+            <div
+                class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-8"
+            >
                 <Card>
                     <CardContent class="pt-6">
                         <div class="text-center">
@@ -176,11 +178,30 @@ const formatDate = (date) => {
                 <Card>
                     <CardContent class="pt-6">
                         <div class="text-center">
-                            <p class="text-3xl font-bold text-gray-600">
+                            <p
+                                class="text-3xl font-bold text-gray-600 dark:text-gray-400"
+                            >
                                 {{ stats.abstention }}
                             </p>
                             <p class="text-sm text-muted-foreground">
                                 Abstentions
+                            </p>
+                        </div>
+                    </CardContent>
+                </Card>
+
+                <Card>
+                    <CardContent class="pt-6">
+                        <div class="text-center">
+                            <p class="text-3xl font-bold text-purple-600">
+                                {{ stats.taux_absenteisme }}%
+                            </p>
+                            <p class="text-sm text-muted-foreground">
+                                Absentéisme
+                            </p>
+                            <p class="text-xs text-muted-foreground mt-1">
+                                {{ stats.absents }} /
+                                {{ stats.total_scrutins }} scrutins
                             </p>
                         </div>
                     </CardContent>
@@ -248,6 +269,12 @@ const formatDate = (date) => {
                                         >
                                             Président(e) de l'Assemblée
                                             nationale
+                                        </span>
+                                        <span
+                                            v-if="deputyVote.vote.demandeur"
+                                            class="px-2 py-1 rounded text-xs font-medium bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300"
+                                        >
+                                            {{ deputyVote.vote.demandeur }}
                                         </span>
                                     </div>
                                     <h3

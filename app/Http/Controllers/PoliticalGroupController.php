@@ -31,11 +31,8 @@ class PoliticalGroupController extends Controller
     {
         $politicalGroup->load('deputies');
 
-        // Statistiques générales
-        $stats = [
-            'total_deputies' => $politicalGroup->deputies->count(),
-            'total_votes' => DeputyVote::whereIn('deputy_id', $politicalGroup->deputies->pluck('id'))->count(),
-        ];
+        $totalDeputies = $politicalGroup->deputies->count();
+        $totalVotes = DeputyVote::whereIn('deputy_id', $politicalGroup->deputies->pluck('id'))->count();
 
         // Votes par position
         $votesByPosition = DeputyVote::whereIn('deputy_id', $politicalGroup->deputies->pluck('id'))
@@ -44,10 +41,28 @@ class PoliticalGroupController extends Controller
             ->get()
             ->pluck('count', 'position');
 
-        $stats['pour'] = (int) ($votesByPosition['pour'] ?? 0);
-        $stats['contre'] = (int) ($votesByPosition['contre'] ?? 0);
-        $stats['abstention'] = (int) ($votesByPosition['abstention'] ?? 0);
-        $stats['non_votant'] = (int) ($votesByPosition['non_votant'] ?? 0);
+        $pour = (int) ($votesByPosition['pour'] ?? 0);
+        $contre = (int) ($votesByPosition['contre'] ?? 0);
+        $abstention = (int) ($votesByPosition['abstention'] ?? 0);
+        $nonVotant = (int) ($votesByPosition['non_votant'] ?? 0);
+
+        // Calculer le nombre total de scrutins
+        $totalScrutins = \App\Models\Vote::count();
+        
+        // Calculer les absences (total possible de votes - votes réels)
+        $totalPossibleVotes = $totalDeputies * $totalScrutins;
+        $absents = $totalPossibleVotes - $totalVotes;
+
+        // Statistiques générales
+        $stats = [
+            'total_deputies' => (int) $totalDeputies,
+            'total_votes' => (int) $totalVotes,
+            'pour' => $pour,
+            'contre' => $contre,
+            'abstention' => $abstention,
+            'non_votant' => $nonVotant,
+            'absents' => (int) $absents,
+        ];
 
         return Inertia::render('PoliticalGroups/Show', [
             'party' => $politicalGroup,

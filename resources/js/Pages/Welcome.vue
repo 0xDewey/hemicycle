@@ -188,6 +188,12 @@ const getResultatBadge = (resultat) => {
                                         >
                                             {{ vote.resultat }}
                                         </Badge>
+                                        <Badge
+                                            v-if="vote.demandeur"
+                                            class="text-xs bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300"
+                                        >
+                                            {{ vote.demandeur }}
+                                        </Badge>
                                     </div>
                                     <h3
                                         class="font-semibold text-foreground mb-1"

@@ -12,7 +12,7 @@ Route::get('/', function () {
     // Récupérer les 5 derniers scrutins
     $recentVotes = \App\Models\Vote::orderBy('date_scrutin', 'desc')
         ->take(5)
-        ->get(['id', 'numero', 'titre', 'date_scrutin', 'resultat', 'pour', 'contre', 'abstention']);
+        ->get(['id', 'numero', 'titre', 'date_scrutin', 'resultat', 'pour', 'contre', 'abstention', 'demandeur']);
     
     // Récupérer les partis politiques avec le nombre de députés
     $politicalGroups = \App\Models\PoliticalGroup::withCount('deputies')

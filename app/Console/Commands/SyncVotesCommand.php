@@ -143,6 +143,12 @@ class SyncVotesCommand extends Command
                     // Extraire la description
                     $description = $scrutin['objet']['libelle'] ?? null;
 
+                    // Extraire le nom du demandeur
+                    $demandeurNom = null;
+                    if (isset($scrutin['demandeur']['texte'])) {
+                        $demandeurNom = $scrutin['demandeur']['texte'];
+                    }
+
                     // Créer ou mettre à jour le vote
                     $vote = Vote::updateOrCreate(
                         ['uid' => $uid],
@@ -156,6 +162,7 @@ class SyncVotesCommand extends Command
                             'contre' => $contre,
                             'abstention' => $abstention,
                             'resultat' => $resultat,
+                            'demandeur' => $demandeurNom,
                             'meta' => $scrutin,
                             'last_synced_at' => now(),
                         ]

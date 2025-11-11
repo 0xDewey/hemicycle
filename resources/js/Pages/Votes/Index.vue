@@ -235,6 +235,12 @@ const getResultatBadge = (resultat) => {
                                 >
                                     {{ vote.type }}
                                 </span>
+                                <span
+                                    v-if="vote.demandeur"
+                                    class="px-3 py-1 rounded-full text-xs font-medium bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300"
+                                >
+                                    {{ vote.demandeur }}
+                                </span>
                             </div>
                         </div>
                     </CardHeader>
