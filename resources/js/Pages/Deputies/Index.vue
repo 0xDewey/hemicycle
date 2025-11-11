@@ -33,6 +33,14 @@ const deputySearch = ref("");
 const departmentStats = ref(null);
 const loading = ref(false);
 
+// Fonction pour normaliser le texte (sans accents ni majuscules)
+const normalizeText = (text) => {
+    return text
+        .toLowerCase()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "");
+};
+
 const departmentOptions = computed(() => {
     return props.departments.map((dept) => ({
         value: dept.code,
@@ -47,13 +55,13 @@ const filteredDepartmentOptions = computed(() => {
         return departmentOptions.value;
     }
 
-    const search = deputySearch.value.toLowerCase();
+    const search = normalizeText(deputySearch.value);
 
-    // Chercher parmi tous les députés
+    // Chercher parmi tous les députés (recherche normalisée)
     const matchingDeputies = props.searchOptions.filter(
         (option) =>
             option.type === "deputy" &&
-            option.label.toLowerCase().includes(search)
+            normalizeText(option.label).includes(search)
     );
 
     // Extraire les départements uniques des députés trouvés
@@ -61,10 +69,10 @@ const filteredDepartmentOptions = computed(() => {
         ...new Set(matchingDeputies.map((d) => d.value)),
     ];
 
-    // Filtrer les départements
+    // Filtrer les départements (recherche normalisée)
     return departmentOptions.value.filter(
         (dept) =>
-            dept.label.toLowerCase().includes(search) ||
+            normalizeText(dept.label).includes(search) ||
             matchingDeptCodes.includes(dept.value)
     );
 });
@@ -87,6 +95,38 @@ const fetchDepartmentStats = async (code) => {
         loading.value = false;
     }
 };
+
+// Auto-sélection du département si la recherche correspond exactement
+watch(deputySearch, (newValue) => {
+    if (!newValue) return;
+
+    const search = normalizeText(newValue);
+
+    // Chercher une correspondance exacte avec un code de département
+    const exactCodeMatch = props.departments.find(
+        (dept) => dept.code.toLowerCase() === newValue.toLowerCase().trim()
+    );
+
+    if (exactCodeMatch) {
+        selectedDepartment.value = exactCodeMatch.code;
+        return;
+    }
+
+    // Chercher une correspondance avec un nom de département
+    const exactNameMatch = props.departments.find(
+        (dept) => normalizeText(dept.name) === search.trim()
+    );
+
+    if (exactNameMatch) {
+        selectedDepartment.value = exactNameMatch.code;
+        return;
+    }
+
+    // Si un seul département correspond au filtre, le sélectionner automatiquement
+    if (filteredDepartmentOptions.value.length === 1) {
+        selectedDepartment.value = filteredDepartmentOptions.value[0].value;
+    }
+});
 
 watch(selectedDepartment, (newValue) => {
     if (newValue) {
