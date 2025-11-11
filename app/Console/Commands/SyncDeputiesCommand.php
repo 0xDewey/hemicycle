@@ -257,7 +257,7 @@ class SyncDeputiesCommand extends Command
             'RN' => '#0d378a', // Rassemblement National - Bleu marine
             
             // Droite
-            'LR' => '#0066CC', // Les Républicains - Bleu
+            'REP' => '#0066CC', // Les Républicains - Bleu
             'DR' => '#0066CC', // Droite Républicaine - Bleu
             'UDR' => '#0066CC', // Union des Démocrates et Républicains - Bleu
             
@@ -268,7 +268,8 @@ class SyncDeputiesCommand extends Command
             // Centre
             'EPR' => '#FFEB00', // Ensemble pour la République - Jaune
             'RE' => '#FFEB00', // Renaissance (ex-LREM) - Jaune
-            'ENS' => '#FFEB00', // Ensemble - Jaune
+            'ESBMP' => '#FFEB00', // Ensemble - Jaune
+            'ENSEM' => '#FFEB00', // Ensemble - Jaune
             'MODEM' => '#FF9900', // MoDem - Orange
             'DEM' => '#FF9900', // Démocrate - Orange
             'HOR' => '#F07C13', // Horizons - Orange foncé
