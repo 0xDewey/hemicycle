@@ -13,9 +13,7 @@ export default {
         "./resources/views/**/*.blade.php",
         "./resources/js/**/*.vue",
     ],
-    safelist: [
-        'dark',
-    ],
+    safelist: ["dark"],
 
     theme: {
         container: {
