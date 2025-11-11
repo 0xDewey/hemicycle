@@ -70,96 +70,108 @@ class VoteController extends Controller
      */
     public function show(Vote $vote)
     {
-        $vote->load(['deputyVotes.deputy.politicalGroup']);
+        try {
+            $vote->load(['deputyVotes.deputy.politicalGroup']);
 
-        $deputyVotes = $vote->deputyVotes->groupBy('position');
+            $deputyVotes = $vote->deputyVotes->groupBy('position');
 
-        // Statistiques détaillées pour les non-votants
-        $nonVotants = $deputyVotes->get('non_votant', collect());
-        $nonVotantsGrouped = $nonVotants->groupBy('cause_position');
+            // Statistiques détaillées pour les non-votants
+            $nonVotants = $deputyVotes->get('non_votant', collect());
+            $nonVotantsGrouped = $nonVotants->groupBy('cause_position');
 
-        $stats = [
-            'pour' => (int) $deputyVotes->get('pour', collect())->count(),
-            'contre' => (int) $deputyVotes->get('contre', collect())->count(),
-            'abstention' => (int) $deputyVotes->get('abstention', collect())->count(),
-            'non_votant' => (int) $nonVotants->count(),
-            'non_votant_pan' => (int) $nonVotantsGrouped->get('PAN', collect())->count(), // Président de l'Assemblée
-            'non_votant_gov' => (int) $nonVotantsGrouped->get('GOV', collect())->count(), // Gouvernement
-            'non_votant_autres' => (int) $nonVotants->whereNotIn('cause_position', ['PAN', 'GOV'])->count(),
-        ];
-
-        // Calculer les absents par parti
-        $totalDeputies = \App\Models\Deputy::count();
-        $votingDeputies = $vote->deputyVotes->count();
-        $stats['absents'] = (int) ($totalDeputies - $votingDeputies);
-
-        // Statistiques par parti politique
-        $partyStats = [];
-        
-        // Pour chaque position (pour, contre, abstention, non_votant)
-        foreach (['pour', 'contre', 'abstention', 'non_votant'] as $position) {
-            $votesInPosition = $deputyVotes->get($position, collect());
-            $partyStats[$position] = $votesInPosition
-                ->groupBy(function($deputyVote) {
-                    return $deputyVote->deputy->groupe_politique ?? 'Sans parti';
-                })
-                ->map(function($votes, $party) use ($position) {
-                    $deputy = $votes->first()->deputy;
-                    
-                    $result = [
-                        'party' => $party,
-                        'party_name' => optional($deputy->politicalGroup)->nom ?? $party,
-                        'party_color' => optional($deputy->politicalGroup)->couleur ?? '#808080',
-                        'count' => (int) $votes->count(),
-                    ];
-                    
-                    // Pour les non-votants, ajouter les détails par cause
-                    if ($position === 'non_votant') {
-                        $result['pan'] = (int) $votes->where('cause_position', 'PAN')->count();
-                        $result['gov'] = (int) $votes->where('cause_position', 'GOV')->count();
-                        $result['autres'] = (int) $votes->whereNotIn('cause_position', ['PAN', 'GOV'])->count();
-                    }
-                    
-                    return $result;
-                })
-                ->sortByDesc('count')
-                ->values();
-        }
-
-        // Calculer les absents par parti
-        $allParties = \App\Models\PoliticalGroup::all();
-        $partyStats['absents'] = $allParties->map(function($party) use ($vote) {
-            // Tous les députés du parti
-            $totalInParty = \App\Models\Deputy::where('groupe_politique', $party->sigle)->count();
-            
-            // Députés du parti qui ont voté
-            $votedInParty = $vote->deputyVotes()
-                ->whereHas('deputy', function($q) use ($party) {
-                    $q->where('groupe_politique', $party->sigle);
-                })
-                ->count();
-            
-            $absents = $totalInParty - $votedInParty;
-            
-            return [
-                'party' => $party->sigle,
-                'party_name' => $party->nom,
-                'party_color' => $party->couleur,
-                'count' => (int) $absents,
-                'total_deputies' => (int) $totalInParty,
+            $stats = [
+                'pour' => (int) $deputyVotes->get('pour', collect())->count(),
+                'contre' => (int) $deputyVotes->get('contre', collect())->count(),
+                'abstention' => (int) $deputyVotes->get('abstention', collect())->count(),
+                'non_votant' => (int) $nonVotants->count(),
+                'non_votant_pan' => (int) $nonVotantsGrouped->get('PAN', collect())->count(), // Président de l'Assemblée
+                'non_votant_gov' => (int) $nonVotantsGrouped->get('GOV', collect())->count(), // Gouvernement
+                'non_votant_autres' => (int) $nonVotants->whereNotIn('cause_position', ['PAN', 'GOV'])->count(),
             ];
-        })
-        ->filter(function($stat) {
-            return $stat['total_deputies'] > 0; // Exclure les partis sans députés
-        })
-        ->sortByDesc('count')
-        ->values();
 
-        return Inertia::render('Votes/Show', [
-            'vote' => $vote,
-            'deputyVotes' => $deputyVotes,
-            'stats' => $stats,
-            'partyStats' => $partyStats,
-        ]);
+            // Calculer les absents par parti
+            $totalDeputies = \App\Models\Deputy::count();
+            $votingDeputies = $vote->deputyVotes->count();
+            $stats['absents'] = (int) ($totalDeputies - $votingDeputies);
+
+            // Statistiques par parti politique
+            $partyStats = [];
+            
+            // Pour chaque position (pour, contre, abstention, non_votant)
+            foreach (['pour', 'contre', 'abstention', 'non_votant'] as $position) {
+                $votesInPosition = $deputyVotes->get($position, collect());
+                $partyStats[$position] = $votesInPosition
+                    ->groupBy(function($deputyVote) {
+                        return $deputyVote->deputy->groupe_politique ?? 'Sans parti';
+                    })
+                    ->map(function($votes, $party) use ($position) {
+                        $deputy = $votes->first()->deputy;
+                        
+                        $result = [
+                            'party' => $party,
+                            'party_name' => optional($deputy->politicalGroup)->nom ?? $party,
+                            'party_color' => optional($deputy->politicalGroup)->couleur ?? '#808080',
+                            'count' => (int) $votes->count(),
+                        ];
+                        
+                        // Pour les non-votants, ajouter les détails par cause
+                        if ($position === 'non_votant') {
+                            $result['pan'] = (int) $votes->where('cause_position', 'PAN')->count();
+                            $result['gov'] = (int) $votes->where('cause_position', 'GOV')->count();
+                            $result['autres'] = (int) $votes->whereNotIn('cause_position', ['PAN', 'GOV'])->count();
+                        }
+                        
+                        return $result;
+                    })
+                    ->sortByDesc('count')
+                    ->values();
+            }
+
+            // Calculer les absents par parti
+            $allParties = \App\Models\PoliticalGroup::all();
+            $partyStats['absents'] = $allParties->map(function($party) use ($vote) {
+                // Tous les députés du parti
+                $totalInParty = \App\Models\Deputy::where('groupe_politique', $party->sigle)->count();
+                
+                // Députés du parti qui ont voté
+                $votedInParty = $vote->deputyVotes()
+                    ->whereHas('deputy', function($q) use ($party) {
+                        $q->where('groupe_politique', $party->sigle);
+                    })
+                    ->count();
+                
+                $absents = $totalInParty - $votedInParty;
+                
+                return [
+                    'party' => $party->sigle,
+                    'party_name' => $party->nom,
+                    'party_color' => $party->couleur,
+                    'count' => (int) $absents,
+                    'total_deputies' => (int) $totalInParty,
+                ];
+            })
+            ->filter(function($stat) {
+                return $stat['total_deputies'] > 0; // Exclure les partis sans députés
+            })
+            ->sortByDesc('count')
+            ->values();
+
+            return Inertia::render('Votes/Show', [
+                'vote' => $vote,
+                'deputyVotes' => $deputyVotes,
+                'stats' => $stats,
+                'partyStats' => $partyStats,
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('Erreur lors de l\'affichage du scrutin', [
+                'vote_id' => $vote->id,
+                'vote_numero' => $vote->numero,
+                'vote_type' => $vote->type,
+                'error_message' => $e->getMessage(),
+                'error_trace' => $e->getTraceAsString(),
+            ]);
+            
+            throw $e;
+        }
     }
 }
