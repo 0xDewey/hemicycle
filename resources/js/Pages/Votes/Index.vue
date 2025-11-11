@@ -276,7 +276,7 @@ const getResultatBadge = (resultat) => {
             <!-- Pagination -->
             <div
                 v-if="votes.links.length > 3"
-                class="flex justify-center gap-2 mt-8"
+                class="flex flex-wrap justify-center gap-2 mt-8"
             >
                 <component
                     v-for="(link, index) in votes.links"
