@@ -2,9 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\DeputyVote;
 use App\Models\PoliticalGroup;
 use App\Models\Vote;
-use App\Models\DeputyVote;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -48,7 +48,7 @@ class PoliticalGroupController extends Controller
 
         // Calculer le nombre total de scrutins
         $totalScrutins = \App\Models\Vote::count();
-        
+
         // Calculer les absences (total possible de votes - votes réels)
         $totalPossibleVotes = $totalDeputies * $totalScrutins;
         $absents = $totalPossibleVotes - $totalVotes;
@@ -79,19 +79,19 @@ class PoliticalGroupController extends Controller
 
         // Filtrer par position si demandé
         $position = $request->get('position');
-        
+
         if ($position) {
-            $query->whereHas('deputyVotes', function($q) use ($politicalGroup, $position) {
+            $query->whereHas('deputyVotes', function ($q) use ($politicalGroup, $position) {
                 $q->whereIn('deputy_id', $politicalGroup->deputies->pluck('id'))
-                  ->where('position', $position);
+                    ->where('position', $position);
             });
         }
 
         // Recherche
         if ($search = $request->get('search')) {
-            $query->where(function($q) use ($search) {
+            $query->where(function ($q) use ($search) {
                 $q->where('titre', 'like', "%{$search}%")
-                  ->orWhere('description', 'like', "%{$search}%");
+                    ->orWhere('description', 'like', "%{$search}%");
             });
         }
 
@@ -100,7 +100,7 @@ class PoliticalGroupController extends Controller
             ->withQueryString();
 
         // Calculer les statistiques pour chaque vote
-        $votes->getCollection()->transform(function($vote) use ($politicalGroup) {
+        $votes->getCollection()->transform(function ($vote) use ($politicalGroup) {
             $partyVotes = DeputyVote::where('vote_id', $vote->id)
                 ->whereIn('deputy_id', $politicalGroup->deputies->pluck('id'))
                 ->selectRaw('position, COUNT(*) as count')

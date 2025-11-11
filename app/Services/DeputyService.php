@@ -6,7 +6,6 @@ use App\Models\Deputy;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
-
 class DeputyService
 {
     /**
@@ -42,7 +41,7 @@ class DeputyService
             return [
                 'code' => $dept->departement,
                 'name' => $this->getDepartmentName($dept->departement),
-                'count' => $dept->count
+                'count' => $dept->count,
             ];
         })->toArray();
     }
@@ -65,7 +64,7 @@ class DeputyService
             $deptName = $this->getDepartmentName($dept->departement);
             $options[] = [
                 'value' => $dept->departement,
-                'label' => "{$dept->departement} - {$deptName} ({$dept->count} député" . ($dept->count > 1 ? 's' : '') . ")",
+                'label' => "{$dept->departement} - {$deptName} ({$dept->count} député".($dept->count > 1 ? 's' : '').')',
                 'type' => 'department',
             ];
         }
@@ -106,7 +105,7 @@ class DeputyService
             'total_deputies' => $deputies->count(),
             'department_code' => $departmentCode,
             'department_name' => $this->getDepartmentName($departmentCode),
-            'deputies' => []
+            'deputies' => [],
         ];
 
         foreach ($deputies as $deputy) {
@@ -183,7 +182,7 @@ class DeputyService
             '974' => 'La Réunion', '976' => 'Mayotte',
         ];
 
-        return $departments[$code] ?? 'Département ' . $code;
+        return $departments[$code] ?? 'Département '.$code;
     }
 
     /**
@@ -192,6 +191,7 @@ class DeputyService
     public function getLastSyncDate(): ?string
     {
         $lastDeputy = Deputy::orderBy('last_synced_at', 'desc')->first();
+
         return $lastDeputy?->last_synced_at?->format('d/m/Y à H:i');
     }
 
@@ -201,8 +201,8 @@ class DeputyService
     public function getDailyParticipation(int $deputyId, int $days = 30): array
     {
         $deputy = Deputy::find($deputyId);
-        
-        if (!$deputy) {
+
+        if (! $deputy) {
             return [];
         }
 
@@ -247,12 +247,12 @@ class DeputyService
 
             $result[] = [
                 'date' => $dateStr,
-                'total_votes' => $dayData ? (int)$dayData->total_votes : 0,
-                'total_scrutins' => $scrutinsData ? (int)$scrutinsData->total_scrutins : 0,
-                'pour' => $dayData ? (int)$dayData->pour : 0,
-                'contre' => $dayData ? (int)$dayData->contre : 0,
-                'abstention' => $dayData ? (int)$dayData->abstention : 0,
-                'non_votant' => $dayData ? (int)$dayData->non_votant : 0,
+                'total_votes' => $dayData ? (int) $dayData->total_votes : 0,
+                'total_scrutins' => $scrutinsData ? (int) $scrutinsData->total_scrutins : 0,
+                'pour' => $dayData ? (int) $dayData->pour : 0,
+                'contre' => $dayData ? (int) $dayData->contre : 0,
+                'abstention' => $dayData ? (int) $dayData->abstention : 0,
+                'non_votant' => $dayData ? (int) $dayData->non_votant : 0,
             ];
         }
 

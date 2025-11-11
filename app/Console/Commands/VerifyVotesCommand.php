@@ -2,10 +2,10 @@
 
 namespace App\Console\Commands;
 
-use Illuminate\Console\Command;
-use App\Models\Vote;
-use App\Models\DeputyVote;
 use App\Models\Deputy;
+use App\Models\DeputyVote;
+use App\Models\Vote;
+use Illuminate\Console\Command;
 
 class VerifyVotesCommand extends Command
 {
@@ -28,7 +28,7 @@ class VerifyVotesCommand extends Command
      */
     public function handle()
     {
-        $this->info("🔍 Vérification des données de votes...");
+        $this->info('🔍 Vérification des données de votes...');
         $this->newLine();
 
         // 1. Vérifier le nombre de votes
@@ -49,11 +49,11 @@ class VerifyVotesCommand extends Command
         if ($votesWithoutDeputyVotes > 0) {
             $this->warn("⚠ $votesWithoutDeputyVotes scrutin(s) sans votes individuels");
         } else {
-            $this->info("✓ Tous les scrutins ont des votes individuels");
+            $this->info('✓ Tous les scrutins ont des votes individuels');
         }
 
         // 5. Vérifier la cohérence des totaux
-        $this->info("🔍 Vérification de la cohérence des totaux...");
+        $this->info('🔍 Vérification de la cohérence des totaux...');
         $inconsistencies = 0;
 
         Vote::with('deputyVotes')->chunk(100, function ($votes) use (&$inconsistencies) {
@@ -72,14 +72,14 @@ class VerifyVotesCommand extends Command
         });
 
         if ($inconsistencies === 0) {
-            $this->info("✓ Tous les totaux sont cohérents");
+            $this->info('✓ Tous les totaux sont cohérents');
         } else {
             $this->error("✗ $inconsistencies incohérence(s) détectée(s)");
         }
         $this->newLine();
 
         // 6. Statistiques par position
-        $this->info("📊 Répartition des votes:");
+        $this->info('📊 Répartition des votes:');
         $positions = DeputyVote::selectRaw('position, COUNT(*) as count')
             ->groupBy('position')
             ->get();
@@ -90,7 +90,7 @@ class VerifyVotesCommand extends Command
         $this->newLine();
 
         // 7. Députés les plus actifs
-        $this->info("👥 Top 10 députés les plus actifs:");
+        $this->info('👥 Top 10 députés les plus actifs:');
         $activeDeputies = DeputyVote::selectRaw('deputy_id, COUNT(*) as vote_count')
             ->groupBy('deputy_id')
             ->orderByDesc('vote_count')
@@ -102,7 +102,7 @@ class VerifyVotesCommand extends Command
             $deputy = $deputyVote->deputy;
             if ($deputy) {
                 $this->line(sprintf(
-                    "   %d. %s %s - %d votes",
+                    '   %d. %s %s - %d votes',
                     $index + 1,
                     $deputy->prenom,
                     $deputy->nom,
@@ -113,12 +113,12 @@ class VerifyVotesCommand extends Command
         $this->newLine();
 
         // 8. Scrutins récents
-        $this->info("📅 5 scrutins les plus récents:");
+        $this->info('📅 5 scrutins les plus récents:');
         $recentVotes = Vote::orderByDesc('date_scrutin')->limit(5)->get();
 
         foreach ($recentVotes as $vote) {
             $this->line(sprintf(
-                "   - %s: %s (Pour: %d, Contre: %d)",
+                '   - %s: %s (Pour: %d, Contre: %d)',
                 $vote->date_scrutin->format('d/m/Y'),
                 \Str::limit($vote->titre, 60),
                 $vote->pour,
@@ -127,7 +127,7 @@ class VerifyVotesCommand extends Command
         }
 
         $this->newLine();
-        $this->info("✅ Vérification terminée !");
+        $this->info('✅ Vérification terminée !');
 
         return 0;
     }

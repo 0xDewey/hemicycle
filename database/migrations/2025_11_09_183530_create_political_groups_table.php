@@ -24,7 +24,7 @@ return new class extends Migration
             $table->json('meta')->nullable(); // Données complètes JSON
             $table->timestamp('last_synced_at')->nullable();
             $table->timestamps();
-            
+
             $table->index('code');
             $table->index('uid');
         });

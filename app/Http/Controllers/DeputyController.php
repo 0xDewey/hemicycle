@@ -45,7 +45,7 @@ class DeputyController extends Controller
     {
         $deputy = $this->deputyService->getDeputyBySlug($slug);
 
-        if (!$deputy) {
+        if (! $deputy) {
             return response()->json([
                 'error' => 'Député non trouvé',
             ], 404);
@@ -84,7 +84,7 @@ class DeputyController extends Controller
     public function getDailyParticipation(int $id, Request $request)
     {
         $days = $request->get('days', 30);
-        
+
         $participation = $this->deputyService->getDailyParticipation($id, $days);
 
         return response()->json($participation);

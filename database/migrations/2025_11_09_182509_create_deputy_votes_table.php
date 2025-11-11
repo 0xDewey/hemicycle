@@ -22,7 +22,7 @@ return new class extends Migration
             $table->boolean('par_delegation')->default(false);
             $table->string('num_place')->nullable();
             $table->timestamps();
-            
+
             // Index pour performance
             $table->index('acteur_ref');
             $table->index('position');

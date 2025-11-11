@@ -2,12 +2,12 @@
 
 namespace App\Console\Commands;
 
-use Illuminate\Console\Command;
-use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\DB;
-use App\Models\Vote;
 use App\Models\Deputy;
 use App\Models\DeputyVote;
+use App\Models\Vote;
+use Illuminate\Console\Command;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
 use ZipArchive;
 
 class SyncVotesCommand extends Command
@@ -37,35 +37,37 @@ class SyncVotesCommand extends Command
     public function handle()
     {
         $url = 'https://data.assemblee-nationale.fr/static/openData/repository/17/loi/scrutins/Scrutins.json.zip';
-        $this->info("📥 Téléchargement des données des scrutins...");
-        $this->info("Source: data.assemblee-nationale.fr");
+        $this->info('📥 Téléchargement des données des scrutins...');
+        $this->info('Source: data.assemblee-nationale.fr');
 
         try {
             // Télécharger le fichier ZIP
             $response = Http::timeout(120)->get($url);
 
-            if (!$response->successful()) {
-                $this->error("❌ Erreur lors du téléchargement : " . $response->status());
+            if (! $response->successful()) {
+                $this->error('❌ Erreur lors du téléchargement : '.$response->status());
+
                 return 1;
             }
 
             $zipPath = storage_path('app/scrutins.zip');
             file_put_contents($zipPath, $response->body());
-            $this->info("✓ Fichier téléchargé (" . $this->formatBytes(strlen($response->body())) . ")");
+            $this->info('✓ Fichier téléchargé ('.$this->formatBytes(strlen($response->body())).')');
 
             // Extraire le ZIP
             $extractPath = storage_path('app/scrutins');
-            if (!file_exists($extractPath)) {
+            if (! file_exists($extractPath)) {
                 mkdir($extractPath, 0755, true);
             }
 
             $zip = new ZipArchive;
-            if ($zip->open($zipPath) === TRUE) {
+            if ($zip->open($zipPath) === true) {
                 $zip->extractTo($extractPath);
                 $zip->close();
-                $this->info("✓ Fichier extrait");
+                $this->info('✓ Fichier extrait');
             } else {
                 $this->error("❌ Impossible d'extraire le fichier ZIP");
+
                 return 1;
             }
 
@@ -73,23 +75,24 @@ class SyncVotesCommand extends Command
             $jsonFiles = glob("$extractPath/json/*.json");
             if (empty($jsonFiles)) {
                 $this->error("❌ Aucun fichier JSON trouvé dans $extractPath/json/");
+
                 return 1;
             }
 
             // Limiter si demandé
             if ($limit = $this->option('limit')) {
-                $jsonFiles = array_slice($jsonFiles, 0, (int)$limit);
+                $jsonFiles = array_slice($jsonFiles, 0, (int) $limit);
             }
 
-            $this->info("📊 Synchronisation de " . count($jsonFiles) . " scrutins...");
+            $this->info('📊 Synchronisation de '.count($jsonFiles).' scrutins...');
 
             // Charger tous les députés en cache une seule fois
-            $this->info("📋 Chargement des députés en cache...");
+            $this->info('📋 Chargement des députés en cache...');
             $deputies = Deputy::all();
             foreach ($deputies as $deputy) {
                 $this->deputiesCache[$deputy->uid] = $deputy->id;
             }
-            $this->info("✓ " . count($this->deputiesCache) . " députés en cache");
+            $this->info('✓ '.count($this->deputiesCache).' députés en cache');
 
             $bar = $this->output->createProgressBar(count($jsonFiles));
             $bar->start();
@@ -100,21 +103,23 @@ class SyncVotesCommand extends Command
             foreach ($jsonFiles as $jsonFile) {
                 try {
                     DB::beginTransaction();
-                    
+
                     $data = json_decode(file_get_contents($jsonFile), true);
-                    
-                    if (!isset($data['scrutin'])) {
+
+                    if (! isset($data['scrutin'])) {
                         DB::rollBack();
                         $bar->advance();
+
                         continue;
                     }
 
                     $scrutin = $data['scrutin'];
                     $uid = $scrutin['uid'] ?? null;
 
-                    if (!$uid) {
+                    if (! $uid) {
                         DB::rollBack();
                         $bar->advance();
+
                         continue;
                     }
 
@@ -178,7 +183,7 @@ class SyncVotesCommand extends Command
 
                 } catch (\Exception $e) {
                     DB::rollBack();
-                    $this->warn("⚠ Erreur pour " . basename($jsonFile) . " : " . $e->getMessage());
+                    $this->warn('⚠ Erreur pour '.basename($jsonFile).' : '.$e->getMessage());
                 }
 
                 $bar->advance();
@@ -186,7 +191,7 @@ class SyncVotesCommand extends Command
 
             $bar->finish();
             $this->newLine(2);
-            $this->info("✅ Synchronisation terminée :");
+            $this->info('✅ Synchronisation terminée :');
             $this->info("   - $countVotes scrutins mis à jour");
             $this->info("   - $countDeputyVotes votes individuels importés");
 
@@ -199,8 +204,9 @@ class SyncVotesCommand extends Command
             return 0;
 
         } catch (\Exception $e) {
-            $this->error("❌ Erreur : " . $e->getMessage());
+            $this->error('❌ Erreur : '.$e->getMessage());
             $this->error($e->getTraceAsString());
+
             return 1;
         }
     }
@@ -255,10 +261,10 @@ class SyncVotesCommand extends Command
         }
 
         // Batch insert/update tous les votes en une seule fois
-        if (!empty($deputyVotesData)) {
+        if (! empty($deputyVotesData)) {
             // Supprimer les votes existants pour ce scrutin
             DeputyVote::where('vote_id', $vote->id)->delete();
-            
+
             // Insérer tous les nouveaux votes par batch
             foreach (array_chunk($deputyVotesData, 500) as $chunk) {
                 DeputyVote::insert($chunk);
@@ -278,12 +284,12 @@ class SyncVotesCommand extends Command
         foreach ($votants as $votant) {
             try {
                 $acteurRef = $votant['acteurRef'] ?? null;
-                if (!$acteurRef) {
+                if (! $acteurRef) {
                     continue;
                 }
 
                 // Utiliser le cache au lieu d'une requête
-                if (!isset($this->deputiesCache[$acteurRef])) {
+                if (! isset($this->deputiesCache[$acteurRef])) {
                     continue;
                 }
 
@@ -318,7 +324,7 @@ class SyncVotesCommand extends Command
             $bytes /= 1024;
         }
 
-        return round($bytes, $precision) . ' ' . $units[$i];
+        return round($bytes, $precision).' '.$units[$i];
     }
 
     /**
@@ -326,14 +332,14 @@ class SyncVotesCommand extends Command
      */
     private function rrmdir($dir)
     {
-        if (!is_dir($dir)) {
+        if (! is_dir($dir)) {
             return;
         }
 
         $objects = scandir($dir);
         foreach ($objects as $object) {
-            if ($object != "." && $object != "..") {
-                $path = $dir . "/" . $object;
+            if ($object != '.' && $object != '..') {
+                $path = $dir.'/'.$object;
                 if (is_dir($path)) {
                     $this->rrmdir($path);
                 } else {

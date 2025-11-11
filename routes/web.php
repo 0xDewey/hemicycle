@@ -1,19 +1,18 @@
 <?php
 
-use Illuminate\Foundation\Application;
-use Illuminate\Support\Facades\Route;
-use Inertia\Inertia;
 use App\Http\Controllers\DeputyController;
 use App\Http\Controllers\DeputyVoteController;
-use App\Http\Controllers\VoteController;
 use App\Http\Controllers\PoliticalGroupController;
+use App\Http\Controllers\VoteController;
+use Illuminate\Support\Facades\Route;
+use Inertia\Inertia;
 
 Route::get('/', function () {
     // Récupérer les 5 derniers scrutins
     $recentVotes = \App\Models\Vote::orderBy('date_scrutin', 'desc')
         ->take(5)
         ->get(['id', 'numero', 'titre', 'date_scrutin', 'resultat', 'pour', 'contre', 'abstention', 'demandeur']);
-    
+
     // Récupérer les partis politiques avec le nombre de députés
     $politicalGroups = \App\Models\PoliticalGroup::withCount('deputies')
         ->orderBy('deputies_count', 'desc')
@@ -67,6 +66,7 @@ Route::prefix('deputies/{deputy}')->name('deputies.')->group(function () {
 // Routes pour les pages légales
 Route::get('/privacy-policy', function () {
     $policy = file_get_contents(resource_path('markdown/policy.md'));
+
     return Inertia::render('PrivacyPolicy', [
         'policy' => \Illuminate\Support\Str::markdown($policy),
     ]);
@@ -74,6 +74,7 @@ Route::get('/privacy-policy', function () {
 
 Route::get('/terms-of-service', function () {
     $terms = file_get_contents(resource_path('markdown/terms.md'));
+
     return Inertia::render('TermsOfService', [
         'terms' => \Illuminate\Support\Str::markdown($terms),
     ]);

@@ -2,10 +2,9 @@
 
 namespace App\Console\Commands;
 
+use App\Models\Deputy;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Storage;
-use App\Models\Deputy;
 use ZipArchive;
 
 class SyncDeputiesCommand extends Command
@@ -33,8 +32,8 @@ class SyncDeputiesCommand extends Command
         $defaultUrl = 'https://data.assemblee-nationale.fr/static/openData/repository/17/amo/deputes_actifs_mandats_actifs_organes_divises/AMO40_deputes_actifs_mandats_actifs_organes_divises.json.zip';
         $url = $this->option('url') ?: $defaultUrl;
 
-        $this->info("📥 Téléchargement des données des députés actifs...");
-        $this->info("Source: " . parse_url($url, PHP_URL_HOST));
+        $this->info('📥 Téléchargement des données des députés actifs...');
+        $this->info('Source: '.parse_url($url, PHP_URL_HOST));
 
         if ($this->option('url')) {
             $this->warn("⚠ Utilisation d'une URL personnalisée");
@@ -44,33 +43,35 @@ class SyncDeputiesCommand extends Command
             // Télécharger le fichier ZIP
             $response = Http::timeout(60)->get($url);
 
-            if (!$response->successful()) {
-                $this->error("❌ Erreur lors du téléchargement : " . $response->status());
+            if (! $response->successful()) {
+                $this->error('❌ Erreur lors du téléchargement : '.$response->status());
                 $this->newLine();
                 $this->warn("💡 Pour trouver l'URL correcte :");
-                $this->line("  1. Visitez https://www.data.gouv.fr/datasets/deputes-actifs");
-                $this->line("  2. Téléchargez le fichier JSON ZIP des députés actifs");
-                $this->line("  3. Utilisez: php artisan data:sync-deputies --url=VOTRE_URL");
+                $this->line('  1. Visitez https://www.data.gouv.fr/datasets/deputes-actifs');
+                $this->line('  2. Téléchargez le fichier JSON ZIP des députés actifs');
+                $this->line('  3. Utilisez: php artisan data:sync-deputies --url=VOTRE_URL');
+
                 return 1;
             }
 
             $zipPath = storage_path('app/deputes.zip');
             file_put_contents($zipPath, $response->body());
-            $this->info("✓ Fichier téléchargé");
+            $this->info('✓ Fichier téléchargé');
 
             // Extraire le ZIP
             $extractPath = storage_path('app/deputes');
-            if (!file_exists($extractPath)) {
+            if (! file_exists($extractPath)) {
                 mkdir($extractPath, 0755, true);
             }
 
             $zip = new ZipArchive;
-            if ($zip->open($zipPath) === TRUE) {
+            if ($zip->open($zipPath) === true) {
                 $zip->extractTo($extractPath);
                 $zip->close();
-                $this->info("✓ Fichier extrait");
+                $this->info('✓ Fichier extrait');
             } else {
                 $this->error("❌ Impossible d'extraire le fichier ZIP");
+
                 return 1;
             }
 
@@ -78,10 +79,11 @@ class SyncDeputiesCommand extends Command
             $jsonFiles = glob("$extractPath/acteur/*.json");
             if (empty($jsonFiles)) {
                 $this->error("❌ Aucun fichier JSON trouvé dans $extractPath/acteur/");
+
                 return 1;
             }
 
-            $this->info("📊 Synchronisation de " . count($jsonFiles) . " députés...");
+            $this->info('📊 Synchronisation de '.count($jsonFiles).' députés...');
 
             $bar = $this->output->createProgressBar(count($jsonFiles));
             $bar->start();
@@ -90,19 +92,21 @@ class SyncDeputiesCommand extends Command
             foreach ($jsonFiles as $jsonFile) {
                 try {
                     $data = json_decode(file_get_contents($jsonFile), true);
-                    
-                    if (!isset($data['acteur'])) {
+
+                    if (! isset($data['acteur'])) {
                         $bar->advance();
+
                         continue;
                     }
 
                     $acteur = $data['acteur'];
-                    
+
                     // Extraire l'UID
                     $uid = $acteur['uid']['#text'] ?? $acteur['uid'] ?? null;
-                    
-                    if (!$uid) {
+
+                    if (! $uid) {
                         $bar->advance();
+
                         continue;
                     }
 
@@ -115,14 +119,14 @@ class SyncDeputiesCommand extends Command
 
                     // Récupérer le mandat parlementaire actuel
                     $mandats = $acteur['mandats']['mandat'] ?? [];
-                    if (!is_array($mandats)) {
+                    if (! is_array($mandats)) {
                         $mandats = [$mandats];
                     }
 
                     // Trouver le mandat parlementaire actif (type ASSEMBLEE)
                     $mandatParlementaire = null;
                     foreach ($mandats as $mandat) {
-                        if (($mandat['typeOrgane'] ?? '') === 'ASSEMBLEE' && 
+                        if (($mandat['typeOrgane'] ?? '') === 'ASSEMBLEE' &&
                             (empty($mandat['dateFin']) || $mandat['dateFin'] === null)) {
                             $mandatParlementaire = $mandat;
                             break;
@@ -130,7 +134,7 @@ class SyncDeputiesCommand extends Command
                     }
 
                     // Si pas de mandat parlementaire actif trouvé, chercher le plus récent
-                    if (!$mandatParlementaire) {
+                    if (! $mandatParlementaire) {
                         foreach ($mandats as $mandat) {
                             if (($mandat['typeOrgane'] ?? '') === 'ASSEMBLEE') {
                                 $mandatParlementaire = $mandat;
@@ -143,26 +147,26 @@ class SyncDeputiesCommand extends Command
                     $groupePolitique = null;
                     $groupePolitiqueAbrege = null;
                     $parpolOrganeRef = null;
-                    
+
                     foreach ($mandats as $mandat) {
-                        if (($mandat['typeOrgane'] ?? '') === 'PARPOL' && 
+                        if (($mandat['typeOrgane'] ?? '') === 'PARPOL' &&
                             (empty($mandat['dateFin']) || $mandat['dateFin'] === null)) {
                             $parpolOrganeRef = $mandat['organes']['organeRef'] ?? null;
                             break;
                         }
                     }
-                    
+
                     // Si un organe PARPOL est trouvé, charger ses informations
                     if ($parpolOrganeRef) {
                         $organeFile = "$extractPath/organe/{$parpolOrganeRef}.json";
                         if (file_exists($organeFile)) {
                             $organeData = json_decode(file_get_contents($organeFile), true);
                             $organe = $organeData['organe'] ?? [];
-                            
+
                             if (($organe['codeType'] ?? '') === 'PARPOL') {
                                 $groupePolitique = $organe['libelle'] ?? null;
                                 $groupePolitiqueAbrege = $organe['libelleAbrev'] ?? null;
-                                
+
                                 // Créer/mettre à jour le groupe politique dans la base de données
                                 if ($groupePolitique && $groupePolitiqueAbrege) {
                                     \App\Models\PoliticalGroup::updateOrCreate(
@@ -183,7 +187,7 @@ class SyncDeputiesCommand extends Command
                     // Extraire les informations de circonscription
                     $election = $mandatParlementaire['election'] ?? [];
                     $lieu = $election['lieu'] ?? [];
-                    
+
                     Deputy::updateOrCreate(
                         ['uid' => $uid],
                         [
@@ -193,7 +197,7 @@ class SyncDeputiesCommand extends Command
                             'departement' => $lieu['numDepartement'] ?? null,
                             'groupe_politique' => $groupePolitiqueAbrege ?: null,
                             'photo' => null, // À compléter ultérieurement
-                            'slug' => \Str::slug($prenom . '-' . $nom),
+                            'slug' => \Str::slug($prenom.'-'.$nom),
                             'meta' => $acteur,
                             'last_synced_at' => now(),
                         ]
@@ -201,7 +205,7 @@ class SyncDeputiesCommand extends Command
 
                     $count++;
                 } catch (\Exception $e) {
-                    $this->warn("⚠ Erreur pour le fichier " . basename($jsonFile) . " : " . $e->getMessage());
+                    $this->warn('⚠ Erreur pour le fichier '.basename($jsonFile).' : '.$e->getMessage());
                 }
 
                 $bar->advance();
@@ -218,7 +222,8 @@ class SyncDeputiesCommand extends Command
             return 0;
 
         } catch (\Exception $e) {
-            $this->error("❌ Erreur : " . $e->getMessage());
+            $this->error('❌ Erreur : '.$e->getMessage());
+
             return 1;
         }
     }
@@ -228,14 +233,14 @@ class SyncDeputiesCommand extends Command
      */
     private function rrmdir($dir)
     {
-        if (!is_dir($dir)) {
+        if (! is_dir($dir)) {
             return;
         }
 
         $objects = scandir($dir);
         foreach ($objects as $object) {
-            if ($object != "." && $object != "..") {
-                $path = $dir . "/" . $object;
+            if ($object != '.' && $object != '..') {
+                $path = $dir.'/'.$object;
                 if (is_dir($path)) {
                     $this->rrmdir($path);
                 } else {
@@ -245,7 +250,7 @@ class SyncDeputiesCommand extends Command
         }
         rmdir($dir);
     }
-    
+
     /**
      * Obtenir une couleur par défaut pour un parti politique
      */
@@ -255,16 +260,16 @@ class SyncDeputiesCommand extends Command
         $colors = [
             // Extrême droite
             'RN' => '#0d378a', // Rassemblement National - Bleu marine
-            
+
             // Droite
             'REP' => '#0066CC', // Les Républicains - Bleu
             'DR' => '#0066CC', // Droite Républicaine - Bleu
             'UDR' => '#0066CC', // Union des Démocrates et Républicains - Bleu
-            
+
             // Centre droit
             'UDI' => '#00ADEE', // UDI - Bleu clair
             'LIOT' => '#ee7f01', // Libertés, Indépendants, Outre-mer et Territoires - Orange
-            
+
             // Centre
             'EPR' => '#FFEB00', // Ensemble pour la République - Jaune
             'RE' => '#FFEB00', // Renaissance (ex-LREM) - Jaune
@@ -274,24 +279,24 @@ class SyncDeputiesCommand extends Command
             'DEM' => '#FF9900', // Démocrate - Orange
             'HOR' => '#F07C13', // Horizons - Orange foncé
             'ACT' => '#FFEB00', // Agir ensemble - Jaune
-            
+
             // Gauche écologiste
             'ECO' => '#00C000', // Écologiste - NUPES - Vert
             'ECOLO' => '#00C000', // Écologiste - Vert
             'EELV' => '#00C000', // Europe Écologie Les Verts - Vert
-            
+
             // Gauche socialiste
             'SOC' => '#FF8080', // Socialistes et apparentés - Rose
             'PS' => '#FF8080', // Parti socialiste - Rose
             'GDR' => '#DD0000', // Gauche démocrate et républicaine - NUPES - Rouge
             'RPS' => '#681F62', // Régions et Peuples Solidaires - Violet
-            
+
             // Gauche radicale
             'LFI' => '#CC2443', // La France Insoumise - NUPES - Rouge carmin
             'FI' => '#CC2443', // France Insoumise - Rouge carmin
             'NUPES' => '#CC2443', // NUPES - Rouge carmin
             'GDR-NUPES' => '#DD0000', // Gauche démocrate et républicaine - NUPES - Rouge
-            
+
             // Autres
             'NI' => '#CCCCCC', // Non-inscrits - Gris
             'PCF' => '#DD0000', // Parti communiste français - Rouge

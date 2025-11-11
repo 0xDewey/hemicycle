@@ -3,8 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\Deputy;
-use App\Models\Vote;
 use App\Models\DeputyVote;
+use App\Models\Vote;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -17,7 +17,7 @@ class DeputyVoteController extends Controller
     {
         // Charger la relation politicalGroup
         $deputy->load('politicalGroup');
-        
+
         $votes = DeputyVote::with('vote')
             ->forDeputy($deputy->id)
             ->orderByVoteDate()
@@ -25,10 +25,10 @@ class DeputyVoteController extends Controller
 
         // Nombre total de scrutins
         $totalScrutins = Vote::count();
-        
+
         // Nombre de votes du député
         $totalVotesDeputy = DeputyVote::forDeputy($deputy->id)->count();
-        
+
         // Calcul des absences
         $absents = $totalScrutins - $totalVotesDeputy;
         $tauxAbsenteisme = $totalScrutins > 0 ? round(($absents / $totalScrutins) * 100, 1) : 0;
@@ -68,7 +68,7 @@ class DeputyVoteController extends Controller
         // Trier
         $sortBy = $request->get('sort_by', 'date_scrutin');
         $sortOrder = $request->get('sort_order', 'desc');
-        
+
         if ($sortBy === 'date_scrutin') {
             $query->orderByVoteDate($sortOrder);
         } else {
