@@ -108,8 +108,8 @@ class VoteController extends Controller
                     
                     $result = [
                         'party' => $party,
-                        'party_name' => $deputy->politicalGroup->nom ?? $party,
-                        'party_color' => $deputy->politicalGroup->couleur ?? '#808080',
+                        'party_name' => optional($deputy->politicalGroup)->nom ?? $party,
+                        'party_color' => optional($deputy->politicalGroup)->couleur ?? '#808080',
                         'count' => (int) $votes->count(),
                     ];
                     
