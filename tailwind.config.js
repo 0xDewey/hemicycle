@@ -5,7 +5,7 @@ import animate from "tailwindcss-animate";
 
 /** @type {import('tailwindcss').Config} */
 export default {
-    darkMode: "media",
+    darkMode: "class",
     content: [
         "./vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php",
         "./vendor/laravel/jetstream/**/*.blade.php",
