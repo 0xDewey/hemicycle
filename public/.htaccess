@@ -5,6 +5,14 @@
 
     RewriteEngine On
 
+    # PHP Performance & Memory Settings
+    <IfModule mod_php.c>
+        php_value memory_limit 256M
+        php_value max_execution_time 60
+        php_value post_max_size 32M
+        php_value upload_max_filesize 32M
+    </IfModule>
+
     # Handle Authorization Header
     RewriteCond %{HTTP:Authorization} .
     RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]

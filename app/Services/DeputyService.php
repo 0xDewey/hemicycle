@@ -11,25 +11,29 @@ use Illuminate\Support\Facades\Cache;
 class DeputyService
 {
     /**
-     * Récupère tous les députés depuis la base de données
+     * Récupère tous les députés depuis la base de données (optimisé)
      */
     public function getAllDeputies(): Collection
     {
         return Cache::remember('deputies.all', 3600, function () {
             return Deputy::where('is_active', true)
+                ->select(['id', 'nom', 'prenom', 'departement', 'circonscription', 'groupe_politique', 'photo', 'slug'])
+                ->with(['politicalGroup:id,sigle,nom,couleur_associee'])
                 ->orderBy('nom')
                 ->get();
         });
     }
 
     /**
-     * Récupère les députés par département
+     * Récupère les députés par département (optimisé)
      */
     public function getDeputiesByDepartment(string $departmentCode): Collection
     {
         return Cache::remember("deputies.department.{$departmentCode}", 3600, function () use ($departmentCode) {
             return Deputy::where('departement', $departmentCode)
                 ->where('is_active', true)
+                ->select(['id', 'nom', 'prenom', 'departement', 'circonscription', 'groupe_politique', 'photo', 'slug'])
+                ->with(['politicalGroup:id,sigle,nom,couleur_associee'])
                 ->orderBy('nom')
                 ->get();
         });

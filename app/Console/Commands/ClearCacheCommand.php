@@ -118,15 +118,18 @@ class ClearCacheCommand extends Command
      */
     protected function clearCirconscriptionsCache()
     {
+        // Cache GeoJSON global et light
         Cache::forget('circonscriptions.geojson');
+        Cache::forget('circonscriptions.geojson.light');
 
-        // Cache paramétré par département
+        // Cache paramétré par département (GeoJSON et liste)
         $departments = \App\Models\Circonscription::select('code_departement')
             ->distinct()
             ->pluck('code_departement');
 
         foreach ($departments as $code) {
             Cache::forget("circonscriptions.department.{$code}");
+            Cache::forget("circonscriptions.geojson.department.{$code}");
         }
     }
 
