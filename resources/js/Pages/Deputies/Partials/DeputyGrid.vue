@@ -42,9 +42,37 @@ const getBackUrl = computed(() => {
                 class="hover:shadow-lg transition-shadow"
             >
                 <CardHeader>
-                    <CardTitle class="text-lg">
-                        {{ deputy.firstname }} {{ deputy.name }}
-                    </CardTitle>
+                    <div class="flex items-start gap-4">
+                        <div class="flex-shrink-0">
+                            <img
+                                v-if="deputy.photo"
+                                :src="`/storage/${deputy.photo}`"
+                                :alt="`Photo de ${deputy.firstname} ${deputy.name}`"
+                                class="w-16 h-16 rounded-lg object-cover border-2 border-border"
+                                @error="
+                                    (e) => {
+                                        e.target.style.display = 'none';
+                                        e.target.nextElementSibling.style.display =
+                                            'flex';
+                                    }
+                                "
+                            />
+                            <div
+                                class="w-16 h-16 rounded-lg bg-muted flex items-center justify-center text-2xl font-bold text-muted-foreground"
+                                :style="{
+                                    display: deputy.photo ? 'none' : 'flex',
+                                }"
+                            >
+                                {{ deputy.firstname?.[0]?.toUpperCase() || ""
+                                }}{{ deputy.name?.[0]?.toUpperCase() || "" }}
+                            </div>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <CardTitle class="text-lg">
+                                {{ deputy.firstname }} {{ deputy.name }}
+                            </CardTitle>
+                        </div>
+                    </div>
                 </CardHeader>
                 <CardContent>
                     <div class="space-y-2">

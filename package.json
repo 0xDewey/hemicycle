@@ -34,6 +34,7 @@
         "vue-chartjs": "^5.3.3"
     },
     "dependencies": {
+        "leaflet": "^1.9.4",
         "tarteaucitronjs": "^1.26.0"
     }
 }
