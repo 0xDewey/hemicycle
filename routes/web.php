@@ -4,32 +4,39 @@ use App\Http\Controllers\DeputyController;
 use App\Http\Controllers\DeputyVoteController;
 use App\Http\Controllers\PoliticalGroupController;
 use App\Http\Controllers\VoteController;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
 Route::get('/', function () {
-    // Récupérer les 5 derniers scrutins
-    $recentVotes = \App\Models\Vote::orderBy('date_scrutin', 'desc')
-        ->take(5)
-        ->get(['id', 'numero', 'titre', 'date_scrutin', 'resultat', 'pour', 'contre', 'abstention', 'demandeur', 'type']);
+    // Cache homepage data for 30 minutes
+    $homepageData = Cache::remember('homepage.stats', 1800, function () {
+        // Récupérer les 5 derniers scrutins
+        $recentVotes = \App\Models\Vote::orderBy('date_scrutin', 'desc')
+            ->take(5)
+            ->get(['id', 'numero', 'titre', 'date_scrutin', 'resultat', 'pour', 'contre', 'abstention', 'demandeur', 'type']);
 
-    // Récupérer les partis politiques avec le nombre de députés
-    $politicalGroups = \App\Models\PoliticalGroup::withCount(['deputies' => function ($query) {
-            $query->where('is_active', true);
-        }])
-        ->orderBy('deputies_count', 'desc')
-        ->take(10)
-        ->get(['id', 'libelle_abrege', 'libelle', 'couleur_associee']);
+        // Récupérer les partis politiques avec le nombre de députés
+        $politicalGroups = \App\Models\PoliticalGroup::withCount(['deputies' => function ($query) {
+                $query->where('is_active', true);
+            }])
+            ->orderBy('deputies_count', 'desc')
+            ->take(10)
+            ->get(['id', 'libelle_abrege', 'libelle', 'couleur_associee']);
 
-    return Inertia::render('Welcome', [
+        return [
+            'deputiesCount' => \App\Models\Deputy::where('is_active', true)->count(),
+            'votesCount' => \App\Models\Vote::count(),
+            'politicalGroupsCount' => \App\Models\PoliticalGroup::count(),
+            'recentVotes' => $recentVotes,
+            'politicalGroups' => $politicalGroups,
+        ];
+    });
+
+    return Inertia::render('Welcome', array_merge([
         'canLogin' => Route::has('login') && false,
         'canRegister' => Route::has('register') && false,
-        'deputiesCount' => \App\Models\Deputy::where('is_active', true)->count(),
-        'votesCount' => \App\Models\Vote::count(),
-        'politicalGroupsCount' => \App\Models\PoliticalGroup::count(),
-        'recentVotes' => $recentVotes,
-        'politicalGroups' => $politicalGroups,
-    ]);
+    ], $homepageData));
 });
 
 // Routes publiques pour les députés

@@ -6,6 +6,7 @@ use App\Models\Department;
 use App\Models\Deputy;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Cache;
 
 class DeputyService
 {
@@ -14,9 +15,11 @@ class DeputyService
      */
     public function getAllDeputies(): Collection
     {
-        return Deputy::where('is_active', true)
-            ->orderBy('nom')
-            ->get();
+        return Cache::remember('deputies.all', 3600, function () {
+            return Deputy::where('is_active', true)
+                ->orderBy('nom')
+                ->get();
+        });
     }
 
     /**
@@ -24,10 +27,12 @@ class DeputyService
      */
     public function getDeputiesByDepartment(string $departmentCode): Collection
     {
-        return Deputy::where('departement', $departmentCode)
-            ->where('is_active', true)
-            ->orderBy('nom')
-            ->get();
+        return Cache::remember("deputies.department.{$departmentCode}", 3600, function () use ($departmentCode) {
+            return Deputy::where('departement', $departmentCode)
+                ->where('is_active', true)
+                ->orderBy('nom')
+                ->get();
+        });
     }
 
     /**
@@ -35,7 +40,9 @@ class DeputyService
      */
     public function getDepartments(): array
     {
-        return Department::getAllWithDeputyCount();
+        return Cache::remember('departments.with_count', 3600, function () {
+            return Department::getAllWithDeputyCount();
+        });
     }
 
     /**
@@ -43,36 +50,38 @@ class DeputyService
      */
     public function getSearchOptions(): array
     {
-        $options = [];
+        return Cache::remember('deputies.search_options', 3600, function () {
+            $options = [];
 
-        // Ajouter les départements
-        $departments = Department::getAllWithDeputyCount();
+            // Ajouter les départements
+            $departments = Department::getAllWithDeputyCount();
 
-        foreach ($departments as $dept) {
-            $options[] = [
-                'value' => $dept['code'],
-                'label' => "{$dept['code']} - {$dept['name']} ({$dept['count']} député".($dept['count'] > 1 ? 's' : '').')',
-                'type' => 'department',
-            ];
-        }
+            foreach ($departments as $dept) {
+                $options[] = [
+                    'value' => $dept['code'],
+                    'label' => "{$dept['code']} - {$dept['name']} ({$dept['count']} député".($dept['count'] > 1 ? 's' : '').')',
+                    'type' => 'department',
+                ];
+            }
 
-        // Ajouter les députés avec leur département
-        $deputies = Deputy::select('id', 'prenom', 'nom', 'departement')
-            ->where('is_active', true)
-            ->whereNotNull('departement')
-            ->orderBy('nom')
-            ->get();
+            // Ajouter les députés avec leur département
+            $deputies = Deputy::select('id', 'prenom', 'nom', 'departement')
+                ->where('is_active', true)
+                ->whereNotNull('departement')
+                ->orderBy('nom')
+                ->get();
 
-        foreach ($deputies as $deputy) {
-            $deptName = Department::getNameByCode($deputy->departement);
-            $options[] = [
-                'value' => $deputy->departement,
-                'label' => "{$deputy->prenom} {$deputy->nom} ({$deputy->departement} - {$deptName})",
-                'type' => 'deputy',
-            ];
-        }
+            foreach ($deputies as $deputy) {
+                $deptName = Department::getNameByCode($deputy->departement);
+                $options[] = [
+                    'value' => $deputy->departement,
+                    'label' => "{$deputy->prenom} {$deputy->nom} ({$deputy->departement} - {$deptName})",
+                    'type' => 'deputy',
+                ];
+            }
 
-        return $options;
+            return $options;
+        });
     }
 
     /**
@@ -80,45 +89,47 @@ class DeputyService
      */
     public function getDepartmentStatistics(string $departmentCode): array
     {
-        $deputies = Deputy::where('departement', $departmentCode)
-            ->where('is_active', true)
-            ->with('politicalGroup')
-            ->orderBy('nom')
-            ->get();
+        return Cache::remember("department.stats.{$departmentCode}", 3600, function () use ($departmentCode) {
+            $deputies = Deputy::where('departement', $departmentCode)
+                ->where('is_active', true)
+                ->with('politicalGroup')
+                ->orderBy('nom')
+                ->get();
 
-        if ($deputies->isEmpty()) {
-            return [];
-        }
+            if ($deputies->isEmpty()) {
+                return [];
+            }
 
-        $stats = [
-            'total_deputies' => $deputies->count(),
-            'department_code' => $departmentCode,
-            'department_name' => Department::getNameByCode($departmentCode),
-            'deputies' => [],
-        ];
-
-        foreach ($deputies as $deputy) {
-            $stats['deputies'][] = [
-                'id' => $deputy->id,
-                'uid' => $deputy->uid,
-                'name' => $deputy->nom,
-                'firstname' => $deputy->prenom,
-                'full_name' => $deputy->full_name,
-                'group' => $deputy->groupe_politique,
-                'group_full' => $deputy->groupe_politique,
-                'group_color' => $deputy->politicalGroup?->couleur_associee,
-                'political_group' => $deputy->politicalGroup ? [
-                    'sigle' => $deputy->politicalGroup->libelle_abrege,
-                    'nom' => $deputy->politicalGroup->libelle,
-                    'couleur' => $deputy->politicalGroup->couleur_associee,
-                ] : null,
-                'constituency' => $deputy->circonscription,
-                'photo' => $deputy->photo,
-                'slug' => $deputy->slug,
+            $stats = [
+                'total_deputies' => $deputies->count(),
+                'department_code' => $departmentCode,
+                'department_name' => Department::getNameByCode($departmentCode),
+                'deputies' => [],
             ];
-        }
 
-        return $stats;
+            foreach ($deputies as $deputy) {
+                $stats['deputies'][] = [
+                    'id' => $deputy->id,
+                    'uid' => $deputy->uid,
+                    'name' => $deputy->nom,
+                    'firstname' => $deputy->prenom,
+                    'full_name' => $deputy->full_name,
+                    'group' => $deputy->groupe_politique,
+                    'group_full' => $deputy->groupe_politique,
+                    'group_color' => $deputy->politicalGroup?->couleur_associee,
+                    'political_group' => $deputy->politicalGroup ? [
+                        'sigle' => $deputy->politicalGroup->libelle_abrege,
+                        'nom' => $deputy->politicalGroup->libelle,
+                        'couleur' => $deputy->politicalGroup->couleur_associee,
+                    ] : null,
+                    'constituency' => $deputy->circonscription,
+                    'photo' => $deputy->photo,
+                    'slug' => $deputy->slug,
+                ];
+            }
+
+            return $stats;
+        });
     }
 
     /**

@@ -273,6 +273,10 @@ class SyncDeputiesCommand extends Command
                 $this->info("📝 $deactivatedCount député(s) désactivé(s)");
             }
 
+            // Vider le cache des députés
+            $this->info('🔄 Vidage du cache des députés...');
+            $this->call('hemicycle:clear-cache', ['--type' => ['deputies', 'homepage']]);
+
             // Nettoyer les fichiers temporaires
             unlink($zipPath);
             $this->rrmdir($extractPath);

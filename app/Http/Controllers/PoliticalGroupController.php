@@ -6,6 +6,7 @@ use App\Models\DeputyVote;
 use App\Models\PoliticalGroup;
 use App\Models\Vote;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Inertia\Inertia;
 
 class PoliticalGroupController extends Controller
@@ -15,9 +16,11 @@ class PoliticalGroupController extends Controller
      */
     public function index()
     {
-        $parties = PoliticalGroup::withCount('deputies')
-            ->orderByDesc('deputies_count')
-            ->get();
+        $parties = Cache::remember('political_groups.with_deputies', 3600, function () {
+            return PoliticalGroup::withCount('deputies')
+                ->orderByDesc('deputies_count')
+                ->get();
+        });
 
         return Inertia::render('PoliticalGroups/Index', [
             'parties' => $parties,
@@ -29,40 +32,42 @@ class PoliticalGroupController extends Controller
      */
     public function show(PoliticalGroup $politicalGroup)
     {
-        $politicalGroup->load('deputies');
+        $stats = Cache::remember("political_group.{$politicalGroup->id}.stats", 3600, function () use ($politicalGroup) {
+            $politicalGroup->load('deputies');
 
-        $totalDeputies = $politicalGroup->deputies->count();
-        $totalVotes = DeputyVote::whereIn('deputy_id', $politicalGroup->deputies->pluck('id'))->count();
+            $totalDeputies = $politicalGroup->deputies->count();
+            $totalVotes = DeputyVote::whereIn('deputy_id', $politicalGroup->deputies->pluck('id'))->count();
 
-        // Votes par position
-        $votesByPosition = DeputyVote::whereIn('deputy_id', $politicalGroup->deputies->pluck('id'))
-            ->selectRaw('position, COUNT(*) as count')
-            ->groupBy('position')
-            ->get()
-            ->pluck('count', 'position');
+            // Votes par position
+            $votesByPosition = DeputyVote::whereIn('deputy_id', $politicalGroup->deputies->pluck('id'))
+                ->selectRaw('position, COUNT(*) as count')
+                ->groupBy('position')
+                ->get()
+                ->pluck('count', 'position');
 
-        $pour = (int) ($votesByPosition['pour'] ?? 0);
-        $contre = (int) ($votesByPosition['contre'] ?? 0);
-        $abstention = (int) ($votesByPosition['abstention'] ?? 0);
-        $nonVotant = (int) ($votesByPosition['non_votant'] ?? 0);
+            $pour = (int) ($votesByPosition['pour'] ?? 0);
+            $contre = (int) ($votesByPosition['contre'] ?? 0);
+            $abstention = (int) ($votesByPosition['abstention'] ?? 0);
+            $nonVotant = (int) ($votesByPosition['non_votant'] ?? 0);
 
-        // Calculer le nombre total de scrutins
-        $totalScrutins = \App\Models\Vote::count();
+            // Calculer le nombre total de scrutins
+            $totalScrutins = \App\Models\Vote::count();
 
-        // Calculer les absences (total possible de votes - votes réels)
-        $totalPossibleVotes = $totalDeputies * $totalScrutins;
-        $absents = $totalPossibleVotes - $totalVotes;
+            // Calculer les absences (total possible de votes - votes réels)
+            $totalPossibleVotes = $totalDeputies * $totalScrutins;
+            $absents = $totalPossibleVotes - $totalVotes;
 
-        // Statistiques générales
-        $stats = [
-            'total_deputies' => (int) $totalDeputies,
-            'total_votes' => (int) $totalVotes,
-            'pour' => $pour,
-            'contre' => $contre,
-            'abstention' => $abstention,
-            'non_votant' => $nonVotant,
-            'absents' => (int) $absents,
-        ];
+            // Statistiques générales
+            return [
+                'total_deputies' => (int) $totalDeputies,
+                'total_votes' => (int) $totalVotes,
+                'pour' => $pour,
+                'contre' => $contre,
+                'abstention' => $abstention,
+                'non_votant' => $nonVotant,
+                'absents' => (int) $absents,
+            ];
+        });
 
         return Inertia::render('PoliticalGroups/Show', [
             'party' => $politicalGroup,

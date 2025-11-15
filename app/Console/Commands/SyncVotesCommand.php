@@ -195,6 +195,10 @@ class SyncVotesCommand extends Command
             $this->info("   - $countVotes scrutins mis à jour");
             $this->info("   - $countDeputyVotes votes individuels importés");
 
+            // Vider le cache des votes
+            $this->info('🔄 Vidage du cache des votes...');
+            $this->call('hemicycle:clear-cache', ['--type' => ['votes', 'homepage']]);
+
             // Nettoyer les fichiers temporaires
             if (file_exists($zipPath)) {
                 unlink($zipPath);

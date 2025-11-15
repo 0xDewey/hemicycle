@@ -110,6 +110,10 @@ class SyncCirconscriptionsCommand extends Command
             $this->newLine(2);
             $this->info("✅ Synchronisation terminée : $count circonscriptions mises à jour");
 
+            // Vider le cache des circonscriptions
+            $this->info('🔄 Vidage du cache des circonscriptions...');
+            $this->call('hemicycle:clear-cache', ['--type' => ['circonscriptions']]);
+
             return 0;
 
         } catch (\Exception $e) {
