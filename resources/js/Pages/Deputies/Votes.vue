@@ -1,6 +1,7 @@
 <script setup>
 import { ref, computed } from "vue";
 import { Head, Link } from "@inertiajs/vue3";
+import PublicLayout from "@/Layouts/PublicLayout.vue";
 import Card from "@/Components/ui/Card.vue";
 import CardHeader from "@/Components/ui/CardHeader.vue";
 import CardTitle from "@/Components/ui/CardTitle.vue";
@@ -75,12 +76,8 @@ const formatDate = (date) => {
 </script>
 
 <template>
-    <Head :title="`Votes de ${deputy.prenom} ${deputy.nom}`" />
-
-    <div
-        class="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-gray-900 dark:to-gray-800 py-12"
-    >
-        <div class="container mx-auto px-4 max-w-7xl">
+    <PublicLayout :title="`Votes de ${deputy.prenom} ${deputy.nom}`">
+        <div class="container mx-auto px-4 max-w-7xl py-12">
             <!-- Header -->
             <div class="mb-8">
                 <Link
@@ -90,17 +87,36 @@ const formatDate = (date) => {
                     <ArrowLeft class="h-4 w-4" />
                     Retour aux députés
                 </Link>
-                <div class="flex items-center gap-4 mb-6">
-                    <div class="p-3 bg-blue-100 dark:bg-blue-900 rounded-lg">
-                        <Users
-                            class="h-8 w-8 text-blue-600 dark:text-blue-400"
+                <div class="flex items-start gap-6 mb-6">
+                    <div class="flex-shrink-0">
+                        <img
+                            v-if="deputy.photo"
+                            :src="`/storage/${deputy.photo}`"
+                            :alt="`Photo de ${deputy.prenom} ${deputy.nom}`"
+                            class="w-24 h-24 rounded-xl object-cover border-4 border-border shadow-lg"
+                            @error="
+                                (e) => {
+                                    e.target.style.display = 'none';
+                                    e.target.nextElementSibling.style.display =
+                                        'flex';
+                                }
+                            "
                         />
+                        <div
+                            class="w-24 h-24 rounded-xl bg-muted flex items-center justify-center text-3xl font-bold text-muted-foreground border-4 border-border shadow-lg"
+                            :style="{
+                                display: deputy.photo ? 'none' : 'flex',
+                            }"
+                        >
+                            {{ deputy.prenom?.[0]?.toUpperCase() || ""
+                            }}{{ deputy.nom?.[0]?.toUpperCase() || "" }}
+                        </div>
                     </div>
-                    <div>
+                    <div class="flex-1">
                         <h1
                             class="text-4xl font-bold text-gray-900 dark:text-white mb-2"
                         >
-                            Votes de {{ deputy.prenom }} {{ deputy.nom }}
+                            {{ deputy.prenom }} {{ deputy.nom }}
                         </h1>
                         <div
                             class="flex items-center gap-4 text-muted-foreground"
@@ -135,6 +151,69 @@ const formatDate = (date) => {
             <div class="mb-8">
                 <DailyParticipationChart :deputy-id="deputy.id" :days="30" />
             </div>
+
+            <!-- Mandate Information Card -->
+            <Card class="mb-8">
+                <CardHeader>
+                    <CardTitle>Informations sur le mandat</CardTitle>
+                </CardHeader>
+                <CardContent>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <p
+                                class="text-sm font-medium text-muted-foreground mb-1"
+                            >
+                                Date d'entrée à l'Assemblée Nationale
+                            </p>
+                            <p class="text-lg font-semibold">
+                                {{
+                                    deputy.mandate_start_date
+                                        ? formatDate(deputy.mandate_start_date)
+                                        : "Non renseignée"
+                                }}
+                            </p>
+                        </div>
+                        <div>
+                            <p
+                                class="text-sm font-medium text-muted-foreground mb-1"
+                            >
+                                Date de sortie de l'Assemblée Nationale
+                            </p>
+                            <p class="text-lg font-semibold">
+                                {{
+                                    deputy.mandate_end_date
+                                        ? formatDate(deputy.mandate_end_date)
+                                        : "En cours"
+                                }}
+                            </p>
+                        </div>
+                    </div>
+                    <div class="mt-4 p-3 bg-muted/50 rounded-lg">
+                        <p class="text-xs text-muted-foreground">
+                            <span class="font-semibold"
+                                >Méthode de calcul :</span
+                            >
+                            Les statistiques ci-dessous sont calculées
+                            uniquement sur les scrutins ayant eu lieu pendant le
+                            mandat du député ({{
+                                deputy.mandate_start_date
+                                    ? `depuis le ${formatDate(
+                                          deputy.mandate_start_date
+                                      )}`
+                                    : "depuis le début"
+                            }}{{
+                                deputy.mandate_end_date
+                                    ? ` jusqu'au ${formatDate(
+                                          deputy.mandate_end_date
+                                      )}`
+                                    : ""
+                            }}). Le taux d'absentéisme représente le pourcentage
+                            de scrutins auxquels le député n'a pas participé
+                            pendant cette période.
+                        </p>
+                    </div>
+                </CardContent>
+            </Card>
 
             <!-- Statistics Cards -->
             <div
@@ -365,5 +444,5 @@ const formatDate = (date) => {
                 </CardContent>
             </Card>
         </div>
-    </div>
+    </PublicLayout>
 </template>

@@ -1,6 +1,7 @@
 <script setup>
 import { ref, computed } from "vue";
 import { Head, Link } from "@inertiajs/vue3";
+import PublicLayout from "@/Layouts/PublicLayout.vue";
 import Card from "@/Components/ui/Card.vue";
 import CardHeader from "@/Components/ui/CardHeader.vue";
 import CardTitle from "@/Components/ui/CardTitle.vue";
@@ -87,12 +88,8 @@ const getResultatBadge = (resultat) => {
 </script>
 
 <template>
-    <Head :title="`Scrutin n°${vote.numero}`" />
-
-    <div
-        class="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-gray-900 dark:to-gray-800 py-12"
-    >
-        <div class="container mx-auto px-4 max-w-7xl">
+    <PublicLayout :title="`Scrutin n°${vote.numero}`">
+        <div class="container mx-auto px-4 max-w-7xl py-12">
             <!-- Back Button -->
             <Link
                 href="/votes"
@@ -240,5 +237,5 @@ const getResultatBadge = (resultat) => {
                 </CardContent>
             </Card>
         </div>
-    </div>
+    </PublicLayout>
 </template>

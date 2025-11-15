@@ -89,6 +89,8 @@ class SyncDeputiesCommand extends Command
             $bar->start();
 
             $count = 0;
+            $processedUids = []; // Pour tracker les députés traités
+            
             foreach ($jsonFiles as $jsonFile) {
                 try {
                     $data = json_decode(file_get_contents($jsonFile), true);
@@ -187,6 +189,45 @@ class SyncDeputiesCommand extends Command
                     // Extraire les informations de circonscription
                     $election = $mandatParlementaire['election'] ?? [];
                     $lieu = $election['lieu'] ?? [];
+                    $causeMandat = $election['causeMandat'] ?? null;
+                    $refCirconscription = $election['refCirconscription'] ?? null;
+
+                    // Extraire les dates de mandat
+                    $mandateStartDate = $mandatParlementaire['dateDebut'] ?? null;
+                    $mandateEndDate = $mandatParlementaire['dateFin'] ?? null;
+                    
+                    // Un député est actif si dateFin est null ou vide
+                    $isActive = empty($mandateEndDate);
+
+                    // Vérifier si le député existe déjà pour récupérer sa photo existante
+                    $existingDeputy = Deputy::where('uid', $uid)->first();
+                    $localPhotoPath = $existingDeputy?->photo;
+
+                    // Télécharger la photo uniquement si elle n'existe pas déjà
+                    if (!$localPhotoPath) {
+                        // Format source: https://www.assemblee-nationale.fr/dyn/static/tribun/17/photos/carre/643089.jpg
+                        // Le numéro est l'UID sans le préfixe "PA"
+                        $photoNumber = str_replace('PA', '', $uid);
+                        $photoUrl = "https://www.assemblee-nationale.fr/dyn/static/tribun/17/photos/carre/{$photoNumber}.jpg";
+                        
+                        // Télécharger et sauvegarder localement
+                        try {
+                            $photoResponse = Http::timeout(10)->get($photoUrl);
+                            if ($photoResponse->successful()) {
+                                $photoDir = storage_path('app/public/deputies');
+                                if (!file_exists($photoDir)) {
+                                    mkdir($photoDir, 0755, true);
+                                }
+                                
+                                $photoFilename = "{$photoNumber}.jpg";
+                                $photoPath = "{$photoDir}/{$photoFilename}";
+                                file_put_contents($photoPath, $photoResponse->body());
+                                $localPhotoPath = "deputies/{$photoFilename}";
+                            }
+                        } catch (\Exception $e) {
+                            // Si le téléchargement échoue, on continue sans photo
+                        }
+                    }
 
                     Deputy::updateOrCreate(
                         ['uid' => $uid],
@@ -196,12 +237,20 @@ class SyncDeputiesCommand extends Command
                             'circonscription' => $lieu['numCirco'] ?? null,
                             'departement' => $lieu['numDepartement'] ?? null,
                             'groupe_politique' => $groupePolitiqueAbrege ?: null,
-                            'photo' => null, // À compléter ultérieurement
+                            'mandate_start_date' => $mandateStartDate,
+                            'mandate_end_date' => $mandateEndDate,
+                            'is_active' => $isActive,
+                            'cause_mandat' => $causeMandat,
+                            'ref_circonscription' => $refCirconscription,
+                            'photo' => $localPhotoPath,
                             'slug' => \Str::slug($prenom.'-'.$nom),
                             'meta' => $acteur,
                             'last_synced_at' => now(),
                         ]
                     );
+
+                    // Ajouter l'UID à la liste des députés traités
+                    $processedUids[] = $uid;
 
                     $count++;
                 } catch (\Exception $e) {
@@ -214,6 +263,15 @@ class SyncDeputiesCommand extends Command
             $bar->finish();
             $this->newLine(2);
             $this->info("✅ Synchronisation terminée : $count députés mis à jour");
+
+            // Désactiver les députés qui ne sont plus dans le fichier d'import
+            $deactivatedCount = Deputy::whereNotIn('uid', $processedUids)
+                ->where('is_active', true)
+                ->update(['is_active' => false]);
+            
+            if ($deactivatedCount > 0) {
+                $this->info("📝 $deactivatedCount député(s) désactivé(s)");
+            }
 
             // Nettoyer les fichiers temporaires
             unlink($zipPath);

@@ -204,15 +204,22 @@ const getResultatBadge = (resultat) => {
                 >
                     <CardHeader>
                         <div class="flex items-start justify-between gap-4">
-                            <div class="flex-1">
-                                <div class="flex items-center gap-2 mb-2">
-                                    <span class="text-sm text-muted-foreground">
+                            <div class="flex-1 min-w-0">
+                                <div
+                                    class="flex items-center gap-2 mb-2 flex-wrap"
+                                >
+                                    <span
+                                        class="text-sm text-muted-foreground shrink-0"
+                                    >
                                         Scrutin n°{{ vote.numero }}
                                     </span>
-                                    <span class="text-sm text-muted-foreground"
+                                    <span
+                                        class="text-sm text-muted-foreground shrink-0"
                                         >•</span
                                     >
-                                    <span class="text-sm text-muted-foreground">
+                                    <span
+                                        class="text-sm text-muted-foreground shrink-0"
+                                    >
                                         {{ formatDate(vote.date_scrutin) }}
                                     </span>
                                 </div>
@@ -220,7 +227,7 @@ const getResultatBadge = (resultat) => {
                                     {{ vote.titre }}
                                 </CardTitle>
                             </div>
-                            <div class="flex flex-col items-end gap-2">
+                            <div class="flex flex-col items-end gap-2 shrink-0">
                                 <span
                                     :class="[
                                         'px-3 py-1 rounded-full text-xs font-medium',
@@ -231,13 +238,15 @@ const getResultatBadge = (resultat) => {
                                 </span>
                                 <span
                                     v-if="vote.type"
-                                    class="px-3 py-1 rounded-full text-xs font-medium bg-indigo-100 dark:bg-indigo-900/30 text-indigo-800 dark:text-indigo-300"
+                                    class="px-3 py-1 rounded-full text-xs font-medium bg-indigo-100 dark:bg-indigo-900/30 text-indigo-800 dark:text-indigo-300 truncate max-w-[150px]"
+                                    :title="vote.type"
                                 >
                                     {{ vote.type }}
                                 </span>
                                 <span
                                     v-if="vote.demandeur"
-                                    class="px-3 py-1 rounded-full text-xs font-medium bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300"
+                                    class="px-3 py-1 rounded-full text-xs font-medium bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 truncate max-w-[150px]"
+                                    :title="vote.demandeur"
                                 >
                                     {{ vote.demandeur }}
                                 </span>
@@ -245,21 +254,23 @@ const getResultatBadge = (resultat) => {
                         </div>
                     </CardHeader>
                     <CardContent>
-                        <div class="flex items-center justify-between">
-                            <div class="flex gap-6 text-sm">
-                                <div>
+                        <div
+                            class="flex items-center justify-between flex-wrap gap-4"
+                        >
+                            <div class="flex gap-6 text-sm flex-wrap">
+                                <div class="shrink-0">
                                     <span class="font-medium text-green-600"
                                         >Pour :</span
                                     >
                                     <span class="ml-1">{{ vote.pour }}</span>
                                 </div>
-                                <div>
+                                <div class="shrink-0">
                                     <span class="font-medium text-red-600"
                                         >Contre :</span
                                     >
                                     <span class="ml-1">{{ vote.contre }}</span>
                                 </div>
-                                <div>
+                                <div class="shrink-0">
                                     <span class="font-medium text-gray-600"
                                         >Abstentions :</span
                                     >
@@ -270,7 +281,7 @@ const getResultatBadge = (resultat) => {
                             </div>
                             <Link
                                 :href="`/votes/${vote.id}`"
-                                class="text-sm text-primary hover:underline"
+                                class="text-sm text-primary hover:underline shrink-0"
                             >
                                 Voir les détails →
                             </Link>

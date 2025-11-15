@@ -14,7 +14,9 @@ class DeputyService
      */
     public function getAllDeputies(): Collection
     {
-        return Deputy::orderBy('nom')->get();
+        return Deputy::where('is_active', true)
+            ->orderBy('nom')
+            ->get();
     }
 
     /**
@@ -23,6 +25,7 @@ class DeputyService
     public function getDeputiesByDepartment(string $departmentCode): Collection
     {
         return Deputy::where('departement', $departmentCode)
+            ->where('is_active', true)
             ->orderBy('nom')
             ->get();
     }
@@ -55,6 +58,7 @@ class DeputyService
 
         // Ajouter les députés avec leur département
         $deputies = Deputy::select('id', 'prenom', 'nom', 'departement')
+            ->where('is_active', true)
             ->whereNotNull('departement')
             ->orderBy('nom')
             ->get();
@@ -77,6 +81,7 @@ class DeputyService
     public function getDepartmentStatistics(string $departmentCode): array
     {
         $deputies = Deputy::where('departement', $departmentCode)
+            ->where('is_active', true)
             ->with('politicalGroup')
             ->orderBy('nom')
             ->get();

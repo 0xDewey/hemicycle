@@ -18,28 +18,65 @@ class DeputyVoteController extends Controller
         // Charger la relation politicalGroup
         $deputy->load('politicalGroup');
 
-        $votes = DeputyVote::with('vote')
+        // Filtrer les votes selon les dates de mandat
+        $votesQuery = DeputyVote::with('vote')
             ->forDeputy($deputy->id)
-            ->orderByVoteDate()
-            ->paginate(20);
+            ->whereHas('vote', function ($query) use ($deputy) {
+                // Seuls les votes pendant le mandat du député
+                if ($deputy->mandate_start_date) {
+                    $query->where('date_scrutin', '>=', $deputy->mandate_start_date);
+                }
+                if ($deputy->mandate_end_date) {
+                    $query->where('date_scrutin', '<=', $deputy->mandate_end_date);
+                }
+            });
 
-        // Nombre total de scrutins
-        $totalScrutins = Vote::count();
+        $votes = $votesQuery->orderByVoteDate()->paginate(20);
 
-        // Nombre de votes du député
-        $totalVotesDeputy = DeputyVote::forDeputy($deputy->id)->count();
+        // Nombre total de scrutins pendant le mandat du député
+        $totalScrutinsQuery = Vote::query();
+        if ($deputy->mandate_start_date) {
+            $totalScrutinsQuery->where('date_scrutin', '>=', $deputy->mandate_start_date);
+        }
+        if ($deputy->mandate_end_date) {
+            $totalScrutinsQuery->where('date_scrutin', '<=', $deputy->mandate_end_date);
+        }
+        $totalScrutins = $totalScrutinsQuery->count();
+
+        // Nombre de votes du député pendant son mandat
+        $totalVotesDeputyQuery = DeputyVote::forDeputy($deputy->id)
+            ->whereHas('vote', function ($query) use ($deputy) {
+                if ($deputy->mandate_start_date) {
+                    $query->where('date_scrutin', '>=', $deputy->mandate_start_date);
+                }
+                if ($deputy->mandate_end_date) {
+                    $query->where('date_scrutin', '<=', $deputy->mandate_end_date);
+                }
+            });
+        $totalVotesDeputy = $totalVotesDeputyQuery->count();
 
         // Calcul des absences
         $absents = $totalScrutins - $totalVotesDeputy;
         $tauxAbsenteisme = $totalScrutins > 0 ? round(($absents / $totalScrutins) * 100, 1) : 0;
 
+        // Statistiques par position pendant le mandat
+        $baseStatsQuery = DeputyVote::forDeputy($deputy->id)
+            ->whereHas('vote', function ($query) use ($deputy) {
+                if ($deputy->mandate_start_date) {
+                    $query->where('date_scrutin', '>=', $deputy->mandate_start_date);
+                }
+                if ($deputy->mandate_end_date) {
+                    $query->where('date_scrutin', '<=', $deputy->mandate_end_date);
+                }
+            });
+
         // Statistiques
         $stats = [
             'total' => (int) $totalVotesDeputy,
-            'pour' => (int) DeputyVote::forDeputy($deputy->id)->where('position', 'pour')->count(),
-            'contre' => (int) DeputyVote::forDeputy($deputy->id)->where('position', 'contre')->count(),
-            'abstention' => (int) DeputyVote::forDeputy($deputy->id)->where('position', 'abstention')->count(),
-            'non_votant' => (int) DeputyVote::forDeputy($deputy->id)->where('position', 'non_votant')->count(),
+            'pour' => (int) (clone $baseStatsQuery)->where('position', 'pour')->count(),
+            'contre' => (int) (clone $baseStatsQuery)->where('position', 'contre')->count(),
+            'abstention' => (int) (clone $baseStatsQuery)->where('position', 'abstention')->count(),
+            'non_votant' => (int) (clone $baseStatsQuery)->where('position', 'non_votant')->count(),
             'absents' => (int) $absents,
             'total_scrutins' => (int) $totalScrutins,
             'taux_absenteisme' => $tauxAbsenteisme,

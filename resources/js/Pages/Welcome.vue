@@ -172,11 +172,13 @@ const getResultatBadge = (resultat) => {
                             class="block border rounded-lg p-4 hover:bg-accent/50 transition-colors"
                         >
                             <div class="flex items-start justify-between gap-4">
-                                <div class="flex-1">
-                                    <div class="flex items-center gap-2 mb-2">
+                                <div class="flex-1 min-w-0">
+                                    <div
+                                        class="flex items-center gap-2 mb-2 flex-wrap"
+                                    >
                                         <Badge
                                             variant="outline"
-                                            class="text-xs"
+                                            class="text-xs shrink-0"
                                         >
                                             Scrutin n°{{ vote.numero }}
                                         </Badge>
@@ -184,19 +186,21 @@ const getResultatBadge = (resultat) => {
                                             :class="
                                                 getResultatBadge(vote.resultat)
                                             "
-                                            class="text-xs"
+                                            class="text-xs shrink-0"
                                         >
                                             {{ vote.resultat }}
                                         </Badge>
                                         <Badge
                                             v-if="vote.type"
-                                            class="text-xs bg-indigo-100 dark:bg-indigo-900/30 text-indigo-800 dark:text-indigo-300"
+                                            class="text-xs bg-indigo-100 dark:bg-indigo-900/30 text-indigo-800 dark:text-indigo-300 truncate max-w-[150px]"
+                                            :title="vote.type"
                                         >
                                             {{ vote.type }}
                                         </Badge>
                                         <Badge
                                             v-if="vote.demandeur"
-                                            class="text-xs bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300"
+                                            class="text-xs bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 truncate max-w-[150px]"
+                                            :title="vote.demandeur"
                                         >
                                             {{ vote.demandeur }}
                                         </Badge>
@@ -207,7 +211,7 @@ const getResultatBadge = (resultat) => {
                                         {{ vote.titre }}
                                     </h3>
                                     <div
-                                        class="flex items-center gap-4 text-xs text-muted-foreground"
+                                        class="flex items-center gap-4 text-xs text-muted-foreground flex-wrap"
                                     >
                                         <span class="flex items-center gap-1">
                                             <Calendar class="h-3 w-3" />

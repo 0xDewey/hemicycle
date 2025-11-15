@@ -1,6 +1,5 @@
 <script setup>
-import { Head } from "@inertiajs/vue3";
-import { Building2 } from "lucide-vue-next";
+import PublicLayout from "@/Layouts/PublicLayout.vue";
 
 defineProps({
     terms: String,
@@ -8,22 +7,12 @@ defineProps({
 </script>
 
 <template>
-    <Head title="Conditions Générales d'Utilisation" />
-
-    <div class="font-sans text-gray-900 dark:text-gray-100 antialiased">
-        <div class="pt-4 bg-gray-100 dark:bg-gray-900">
-            <div class="min-h-screen flex flex-col items-center pt-6 sm:pt-0">
-                <div>
-                    <Building2
-                        class="h-16 w-16 text-blue-600 dark:text-blue-400"
-                    />
-                </div>
-
-                <div
-                    class="w-full sm:max-w-2xl mt-6 p-6 bg-white dark:bg-gray-800 shadow-md overflow-hidden sm:rounded-lg prose dark:prose-invert"
-                    v-html="terms"
-                />
-            </div>
+    <PublicLayout title="Conditions Générales d'Utilisation">
+        <div class="container mx-auto px-4 max-w-4xl py-12">
+            <div
+                class="prose prose-lg dark:prose-invert max-w-none bg-white dark:bg-gray-800 rounded-lg shadow-lg p-8"
+                v-html="terms"
+            />
         </div>
-    </div>
+    </PublicLayout>
 </template>

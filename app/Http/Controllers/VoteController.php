@@ -99,7 +99,7 @@ class VoteController extends Controller
         ];
 
         // Calculer les absents par parti
-        $totalDeputies = \App\Models\Deputy::count();
+        $totalDeputies = \App\Models\Deputy::where('is_active', true)->count();
         $votingDeputies = $vote->deputyVotes->count();
         $stats['absents'] = (int) ($totalDeputies - $votingDeputies);
 
@@ -139,13 +139,16 @@ class VoteController extends Controller
         // Calculer les absents par parti
         $allParties = \App\Models\PoliticalGroup::all();
         $partyStats['absents'] = $allParties->map(function ($party) use ($vote) {
-            // Tous les députés du parti
-            $totalInParty = \App\Models\Deputy::where('groupe_politique', $party->sigle)->count();
+            // Tous les députés actifs du parti
+            $totalInParty = \App\Models\Deputy::where('groupe_politique', $party->sigle)
+                ->where('is_active', true)
+                ->count();
 
             // Députés du parti qui ont voté
             $votedInParty = $vote->deputyVotes()
                 ->whereHas('deputy', function ($q) use ($party) {
-                    $q->where('groupe_politique', $party->sigle);
+                    $q->where('groupe_politique', $party->sigle)
+                      ->where('is_active', true);
                 })
                 ->count();
 
@@ -167,6 +170,7 @@ class VoteController extends Controller
 
         // Calculer les statistiques par département - structure différente
         $allDepartments = \App\Models\Deputy::select('departement')
+            ->where('is_active', true)
             ->groupBy('departement')
             ->get()
             ->pluck('departement');
@@ -186,8 +190,10 @@ class VoteController extends Controller
                 'total_deputies' => 0,
             ];
 
-            // Total des députés du département
-            $totalInDept = \App\Models\Deputy::where('departement', $department)->count();
+            // Total des députés actifs du département
+            $totalInDept = \App\Models\Deputy::where('departement', $department)
+                ->where('is_active', true)
+                ->count();
             $deptVotes['total_deputies'] = $totalInDept;
 
             // Compter les votes pour chaque position

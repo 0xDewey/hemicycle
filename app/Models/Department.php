@@ -16,13 +16,14 @@ class Department extends Model
     /**
      * Relation avec les députés
      */
-    public function deputies(): HasMany
+    public function deputies()
     {
-        return $this->hasMany(Deputy::class, 'departement', 'code');
+        return $this->hasMany(Deputy::class, 'departement', 'code')
+            ->where('is_active', true);
     }
 
     /**
-     * Récupérer un département par son code
+     * Récupérer le nom d'un département par son code
      */
     public static function findByCode(string $code): ?self
     {

@@ -15,6 +15,11 @@ class Deputy extends Model
         'circonscription',
         'departement',
         'groupe_politique',
+        'mandate_start_date',
+        'mandate_end_date',
+        'is_active',
+        'cause_mandat',
+        'ref_circonscription',
         'photo',
         'slug',
         'meta',
@@ -24,6 +29,9 @@ class Deputy extends Model
     protected $casts = [
         'meta' => 'array',
         'last_synced_at' => 'datetime',
+        'mandate_start_date' => 'date',
+        'mandate_end_date' => 'date',
+        'is_active' => 'boolean',
     ];
 
     /**

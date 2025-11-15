@@ -14,7 +14,9 @@ Route::get('/', function () {
         ->get(['id', 'numero', 'titre', 'date_scrutin', 'resultat', 'pour', 'contre', 'abstention', 'demandeur', 'type']);
 
     // Récupérer les partis politiques avec le nombre de députés
-    $politicalGroups = \App\Models\PoliticalGroup::withCount('deputies')
+    $politicalGroups = \App\Models\PoliticalGroup::withCount(['deputies' => function ($query) {
+            $query->where('is_active', true);
+        }])
         ->orderBy('deputies_count', 'desc')
         ->take(10)
         ->get(['id', 'libelle_abrege', 'libelle', 'couleur_associee']);
@@ -22,7 +24,7 @@ Route::get('/', function () {
     return Inertia::render('Welcome', [
         'canLogin' => Route::has('login') && false,
         'canRegister' => Route::has('register') && false,
-        'deputiesCount' => \App\Models\Deputy::count(),
+        'deputiesCount' => \App\Models\Deputy::where('is_active', true)->count(),
         'votesCount' => \App\Models\Vote::count(),
         'politicalGroupsCount' => \App\Models\PoliticalGroup::count(),
         'recentVotes' => $recentVotes,
@@ -42,6 +44,12 @@ Route::prefix('deputies')->name('deputies.')->group(function () {
         Route::get('/deputes/{slug}', [DeputyController::class, 'show'])->name('show');
         Route::get('/daily-participation/{id}', [DeputyController::class, 'getDailyParticipation'])->name('daily-participation');
     });
+});
+
+// Routes pour les circonscriptions
+Route::prefix('circonscriptions')->name('circonscriptions.')->group(function () {
+    Route::get('/geojson', [\App\Http\Controllers\CirconscriptionController::class, 'geojson'])->name('geojson');
+    Route::get('/departement/{code}', [\App\Http\Controllers\CirconscriptionController::class, 'byDepartment'])->name('by-department');
 });
 
 // Routes pour les votes
