@@ -1,5 +1,10 @@
 {
     "$schema": "https://json.schemastore.org/package.json",
+    "name": "hemicycle",
+    "version": "1.0.0",
+    "description": "Visualisation interactive des données de l'Assemblée nationale française",
+    "author": "0xDewey",
+    "license": "MIT",
     "private": true,
     "type": "module",
     "scripts": {

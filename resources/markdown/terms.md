@@ -158,7 +158,7 @@ Si une disposition des présentes CGU est jugée invalide ou inapplicable, les a
 ## 15. Mentions légales
 
 **Éditeur** : Dowedev
-**Responsable de publication** : Bastien DA SILVA  
+**Responsable de publication** : OxDewey
 **Hébergeur** : O2Switch
 
 -   Adresse : 222-224 Boulevard Gustave Flaubert, 63000 Clermont-Ferrand
